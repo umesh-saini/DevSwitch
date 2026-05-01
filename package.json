@@ -1,0 +1,109 @@
+{
+  "name": "dev-switch",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron/main.ts",
+  "homepage": "./",
+  "description": "DevSwitch is a cross-platform desktop application built with Electron and React that simplifies the management of multiple Git profiles and SSH keys. Whether you're a developer juggling personal and work accounts, or managing multiple client projects, DevSwitch streamlines SSH key generation, configuration, and profile switching.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "electron:dev": "tsc && electron electron/main.ts",
+    "electron:build": "tsc && electron-builder"
+  },
+  "dependencies": {
+    "@floating-ui/react": "^0.27.17",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/uuid": "^10.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
+    "electron-store": "^11.0.2",
+    "electron-updater": "^6.7.3",
+    "lucide-react": "^0.563.0",
+    "motion": "^12.33.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.0",
+    "tailwind-animate": "^0.2.10",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.18",
+    "uuid": "^13.0.0",
+    "vite-plugin-svgr": "^4.5.0",
+    "zustand": "^5.0.11"
+  },
+  "optionalDependencies": {
+    "node-mac-permissions": "^2.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "electron": "^40.2.1",
+    "electron-builder": "^26.7.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "shadcn": "^3.8.4",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4"
+  },
+  "build": {
+    "appId": "com.devswitch.app",
+    "mac": {
+      "target": "default",
+      "icon": "public/icons/512x512.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "identity": null,
+      "extendInfo": {
+        "NSDocumentsFolderUsageDescription": "Your app needs access to the Documents folder to save and load files.",
+        "NSDownloadsFolderUsageDescription": "Your app needs access to the Downloads folder to save and load files.",
+        "NSDesktopFolderUsageDescription": "Your app needs access to the Desktop folder to save and load files.",
+        "NSFullDiskAccessUsageDescription": "Your app needs full disk access to read and write files across the system.",
+        "NSMicrophoneUsageDescription": "Your app needs access to the microphone for audio input.",
+        "NSCameraUsageDescription": "Your app needs access to the camera for video input.",
+        "NSScreenCaptureUsageDescription": "Your app needs screen recording access to capture your screen.",
+        "NSAccessibilityUsageDescription": "Your app needs accessibility access for enhanced features.",
+        "NSInputMonitoringUsageDescription": "Your app needs input monitoring access to provide input features."
+      }
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "icon": "public/icons/",
+      "category": "Utility"
+    },
+    "win": {
+      "icon": "public/icons/256x256.ico",
+      "target": [
+        "nsis"
+      ]
+    },
+    "files": [
+      "electron/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://localhost:3000/downloads/"
+      }
+    ]
+  },
+  "author": {
+    "name": "umesh-saini",
+    "email": "umeshsaini8085@gmail.com"
+  }
+}

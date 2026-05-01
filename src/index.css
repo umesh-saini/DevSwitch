@@ -1,0 +1,297 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap");
+
+@import "tailwindcss";
+
+/* Electron window dragging regions */
+.app-drag {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.app-titlebar {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+@import "tw-animate-css";
+@import "tailwind-animate";
+
+/* Custom scrollbar styles */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--border) / 0.8);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@theme {
+  /* Fonts */
+  --font-sans: "Source Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out forwards;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Light theme CSS variables for custom usage */
+:root {
+  /* Core Palette */
+  --background: #ffffff;
+  --foreground: #1f2328;
+  
+  --card: #ffffff;
+  --card-foreground: #1f2328;
+  
+  --popover: #ffffff;
+  --popover-foreground: #1f2328;
+
+  /* GitHub Blue & Interactive */
+  --primary: #0969da;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #f6f8fa;
+  --secondary-foreground: #1f2328;
+
+  --muted: #f6f8fa;
+  --muted-foreground: #656d76;
+
+  --accent: #0969da;
+  --accent-foreground: #ffffff;
+
+  --destructive: #d1242f;
+  --destructive-foreground: #ffffff;
+
+  /* Borders & Inputs */
+  --border: #d0d7de;
+  --input: #d0d7de;
+  --ring: #0969da;
+
+  /* Specifics */
+  --radius: 0.375rem; /* GitHub uses tighter corners */
+  --surface-elevated: #ffffff;
+  --text-tertiary: #6e7781;
+  
+  --gradient-hero: linear-gradient(180deg, #f6f8fa 0%, #ffffff 100%);
+  
+  --shadow-soft: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow-elevated: 0 8px 24px rgba(140, 149, 159, 0.2);
+
+  /* Sidebar (Subtle Gray) */
+  --sidebar: #f6f8fa;
+  --sidebar-background: #f6f8fa;
+  --sidebar-foreground: #1f2328;
+  --sidebar-border: #d0d7de;
+
+  /* Charts */
+  --chart-1: #2da44e; /* Green */
+  --chart-2: #0969da; /* Blue */
+  --chart-3: #bf3989; /* Pink */
+  --chart-4: #8250df; /* Purple */
+  --chart-5: #cf222e; /* Red */
+}
+
+/* Dark theme */
+.dark {
+  /* Core Palette */
+  --background: #0d1117;
+  --foreground: #f0f6fc;
+
+  --card: #161b22;
+  --card-foreground: #f0f6fc;
+
+  --popover: #161b22;
+  --popover-foreground: #f0f6fc;
+
+  /* GitHub Action Blue */
+  --primary: #2f81f7;
+  --primary-foreground: #ffffff;
+
+  --secondary: #21262d;
+  --secondary-foreground: #f0f6fc;
+
+  --muted: #161b22;
+  --muted-foreground: #8b949e;
+
+  --accent: #2f81f7;
+  --accent-foreground: #ffffff;
+
+  --destructive: #f85149;
+  --destructive-foreground: #ffffff;
+
+  /* Borders & Inputs */
+  --border: #30363d;
+  --input: #30363d;
+  --ring: #1f6feb;
+
+  --surface-elevated: #161b22;
+  --text-tertiary: #7d8590;
+
+  --gradient-hero: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+  
+  --shadow-soft: 0 1px 0 rgba(0, 0, 0, 1);
+  --shadow-elevated: 0 10px 28px rgba(0, 0, 0, 0.75);
+
+  /* Sidebar */
+  --sidebar: #010409;
+  --sidebar-background: #010409;
+  --sidebar-foreground: #f0f6fc;
+  --sidebar-border: #30363d;
+
+  /* Charts */
+  --chart-1: #3fb950;
+  --chart-2: #388bfd;
+  --chart-3: #f778ba;
+  --chart-4: #a371f7;
+  --chart-5: #f85149;
+}
+
+/* Base styles */
+* {
+  border-color: var(--border);
+}
+body {
+  background-color: transparent;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Utility classes */
+.text-gradient {
+  background-image: var(--gradient-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.shadow-elevated {
+  box-shadow: var(--shadow-elevated);
+}
+
+.surface-elevated {
+  background-color: var(--surface-elevated);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

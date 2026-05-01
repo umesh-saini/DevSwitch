@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Info.plist for DevSwitch (macOS)
+  ─────────────────────────────────
+  electron-builder picks this up from the build/ directory automatically.
+  It merges these keys into the generated .app bundle's Info.plist.
+
+  IMPORTANT: node-mac-permissions must be listed under optionalDependencies
+  in package.json so that it is only installed on macOS builds.
+  After installing, run: npx @electron/rebuild -f -w node-mac-permissions
+-->
+<plist version="1.0">
+  <dict>
+
+    <!-- ── Identity ── -->
+    <key>CFBundleDisplayName</key>
+    <string>DevSwitch</string>
+
+    <key>CFBundleExecutable</key>
+    <string>DevSwitch</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.DevSwitch.app</string>
+
+    <key>CFBundleName</key>
+    <string>DevSwitch</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>0.0.1</string>
+
+    <key>CFBundleVersion</key>
+    <string>0.0.1</string>
+
+    <!-- ── System requirements ── -->
+    <key>LSMinimumSystemVersion</key>
+    <string>10.13.0</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+
+    <!-- ── Permission usage descriptions ──
+         macOS requires a human-readable reason for every privacy permission
+         the app requests, or it will be denied silently.
+    -->
+
+    <!--
+      Full Disk Access covers reading/writing ~/.ssh and any other
+      file that macOS classifies as sensitive.
+    -->
+    <key>NSFullDiskAccessUsageDescription</key>
+    <string>DevSwitch needs Full Disk Access to read, create, and manage SSH keys stored in your ~/.ssh folder for GitHub profile management.</string>
+
+    <!--
+      Desktop / Documents / Downloads – requested if the user chooses
+      to import an existing SSH key file from one of these locations.
+    -->
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>DevSwitch may need to access your Desktop to import existing SSH key files.</string>
+
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>DevSwitch may need to access your Documents folder to import existing SSH key files.</string>
+
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>DevSwitch may need to access your Downloads folder to import existing SSH key files.</string>
+
+  </dict>
+</plist>

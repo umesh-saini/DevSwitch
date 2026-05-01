@@ -1,0 +1,6 @@
+- electron AUTO APP updater.
+- multiple os build support.
+- auto build and publish to github release.
+- mac on app lunch ask for permission using node-mac-permission 
+- package json build configs.
+- app icons settings.
