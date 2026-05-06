@@ -607,6 +607,33 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+---
+
+## 🚀 Quick Start
+
+### First Time Setup
+
+1. **Install DevSwitch**: Download from [Releases](https://github.com/umesh-saini/devswitch/releases)
+2. **Add Your First Profile**:
+   - Click "Add Profile"
+   - Enter profile name (e.g., "Work", "Personal")
+   - Select or generate SSH key
+   - Configure Git user.name and user.email
+3. **Switch Profiles**: Click on any profile card to switch instantly
+
+### Daily Usage
+
+- **Switch to Work**: Click "Work" profile → auto-switches SSH keys and Git config
+- **Switch to Personal**: Click "Personal" profile → updates all credentials
+- **Check Active Profile**: Current profile is highlighted in the UI
+
+### Keyboard Shortcuts
+
+- `Ctrl/Cmd + K`: Quick profile switcher
+- `Ctrl/Cmd + ,`: Open settings
+
+---
+
 ## 📧 Support
 
 For bugs, feature requests, or questions:
@@ -622,3 +649,39 @@ For bugs, feature requests, or questions:
 ⭐ Star this repo if you find it useful!
 
 </div>
+
+---
+
+## 💡 Usage Examples
+
+### Scenario 1: Freelancer with Multiple Clients
+
+**Morning: Switch to "Client A" profile**
+- SSH key: `~/.ssh/client_a`
+- Git: John Doe <john@client-a.com>
+
+**Afternoon: Switch to "Client B" profile**
+- SSH key: `~/.ssh/client_b`
+- Git: John Doe <john@client-b.com>
+
+### Scenario 2: Work + Personal Projects
+
+**Work hours: "Work" profile active**
+- Corporate SSH key
+- Work email configured
+
+**Evening: Switch to "Personal"**
+- Personal GitHub key
+- Personal email for commits
+
+### Scenario 3: Open Source + Private Projects
+
+**Open source contributions: "Open Source" profile**
+- Public SSH key
+- Public email
+
+**Private projects: "Private" profile**
+- Private SSH key
+- Private email
+
+---
