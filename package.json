@@ -11,7 +11,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:dev": "tsc && electron electron/main.ts",
+    "electron:dev": "tsc && electron electron/main.ts --no-sandbox",
     "electron:build": "tsc && electron-builder"
   },
   "dependencies": {
