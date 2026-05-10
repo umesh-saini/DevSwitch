@@ -16,6 +16,7 @@ import type {
 import { sshKeyService } from "./services/sshKeyService.ts";
 import { sshAgentService } from "./services/sshAgentService.ts";
 import { sshConfigService } from "./services/sshConfigService.ts";
+import { sshConfigParserService } from "./services/sshConfigParserService.ts";
 import { encryptPassphrase } from "./utils/encryption.ts";
 import { getOAuthService, getApiService } from "./services/index.ts";
 import { gitService } from "./services/gitService.ts";
@@ -454,6 +455,14 @@ ipcMain.handle("sshConfig:update", async (_, profile: Profile) => {
 
 ipcMain.handle("sshConfig:read", async () => {
   return await sshConfigService.readConfig();
+});
+
+ipcMain.handle("sshConfigEditor:read", async () => {
+  return await sshConfigParserService.readParsedConfig();
+});
+
+ipcMain.handle("sshConfigEditor:save", async (_, entries) => {
+  return await sshConfigParserService.saveParsedConfig(entries);
 });
 
 ipcMain.handle("sshConfig:getHostAlias", async (_, keyPath: string) => {

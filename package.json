@@ -30,6 +30,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
+    "ssh-config": "^5.1.0",
     "tailwind-animate": "^0.2.10",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",

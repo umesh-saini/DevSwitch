@@ -6,6 +6,7 @@ import { CreateProfilePage } from './pages/CreateProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { ProfileViewPage } from './pages/ProfileViewPage';
 import { PermissionPage } from './pages/PermissionPage';
+import { SSHConfigEditorPage } from './pages/SSHConfigEditorPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/new" element={<CreateProfilePage />} />
           <Route path="/view/:id" element={<ProfileViewPage />} />
+          <Route path="/ssh-config" element={<SSHConfigEditorPage />} />
           <Route path="/:id" element={<EditProfilePage />} />
         </Routes>
       </HashRouter>

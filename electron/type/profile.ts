@@ -1,6 +1,7 @@
 export type SSHKeyType = 'default' | 'generated' | 'existing';
 export type KeyAlgorithm = 'ed25519' | 'rsa';
 export type GitProvider = 'github' | 'gitlab' | 'bitbucket' | 'azure' | 'other';
+import type { SSHConfigEntry } from '../../src/types/sshConfig.ts';
 
 /**
  * Generic provider connection metadata.
@@ -130,6 +131,10 @@ export interface ElectronAPI {
     update: (profile: Profile) => Promise<{ success: boolean; error?: string }>;
     read: () => Promise<{ content: string; error?: string }>;
     getHostAlias: (keyPath: string) => Promise<{ hostAlias: string | null; error?: string }>;
+  };
+  sshConfigEditor: {
+    read: () => Promise<{ entries: SSHConfigEntry[]; error?: string }>;
+    save: (entries: SSHConfigEntry[]) => Promise<{ success: boolean; error?: string }>;
   };
   git: {
     getGlobalConfig: () => Promise<{ config: { [key: string]: string }; error?: string }>;

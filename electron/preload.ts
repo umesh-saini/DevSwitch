@@ -22,6 +22,10 @@ const electronAPI: ElectronAPI = {
     read: () => ipcRenderer.invoke('sshConfig:read'),
     getHostAlias: (keyPath: string) => ipcRenderer.invoke('sshConfig:getHostAlias', keyPath),
   },
+  sshConfigEditor: {
+    read: () => ipcRenderer.invoke('sshConfigEditor:read'),
+    save: (entries) => ipcRenderer.invoke('sshConfigEditor:save', entries),
+  },
   git: {
     getGlobalConfig: () => ipcRenderer.invoke('git:getGlobalConfig'),
     cloneRepository: (params) => ipcRenderer.invoke('git:cloneRepository', params),
