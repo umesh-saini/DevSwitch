@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import os from "os";
 import { storageService } from "./services/storageService.ts";
+import { logService } from "./services/logService.ts";
 import type {
   CreateProfileInput,
   Profile,
@@ -149,6 +150,19 @@ app.on("window-all-closed", () => {
 
 // IPC Handlers
 
+// Log Management
+ipcMain.handle("log:getAll", async () => {
+  return logService.getAllLogs();
+});
+
+ipcMain.handle("log:clear", async () => {
+  logService.clearLogs();
+});
+
+ipcMain.handle("log:clearBefore", async (_, timestamp: number) => {
+  logService.clearLogsBefore(timestamp);
+});
+
 // Profile Management
 ipcMain.handle(
   "profile:create",
@@ -213,6 +227,12 @@ ipcMain.handle(
 
     // Save profile
     storageService.saveProfile(profile);
+
+    logService.addLog('PROFILE_CREATED', `Profile "${profile.name}" created`, {
+      profileId: profile.id,
+      provider: profile.provider,
+      sshKeyType: profile.sshKeyType
+    });
 
     return profile;
   },
@@ -292,6 +312,11 @@ ipcMain.handle(
 
     storageService.saveProfile(updatedProfile);
 
+    logService.addLog('PROFILE_UPDATED', `Profile "${updatedProfile.name}" updated`, {
+      profileId: updatedProfile.id,
+      provider: updatedProfile.provider
+    });
+
     return updatedProfile;
   },
 );
@@ -307,6 +332,11 @@ ipcMain.handle("profile:delete", async (_, id: string): Promise<boolean> => {
     if (profile.sshKeyType === "generated" && profile.keyPath) {
       sshKeyService.deleteKey(profile.keyPath);
     }
+    
+    logService.addLog('PROFILE_DELETED', `Profile "${profile.name}" deleted`, {
+      profileId: profile.id,
+      provider: profile.provider
+    });
   }
 
   return storageService.deleteProfile(id);
@@ -637,15 +667,24 @@ for (const provider of OAUTH_PROVIDERS) {
 
   ipcMain.handle(
     `${provider}:disconnectAccount`,
-    async (_, profileId: string) =>
-      getOAuthService(provider as OAuthProviderName).disconnectAccount(
-        profileId,
-      ),
+    async (_, profileId: string) => {
+      const result = await getOAuthService(provider as OAuthProviderName).disconnectAccount(profileId);
+      if (result.success) {
+        const profile = storageService.getProfile(profileId);
+        logService.addLog('PROVIDER_DISCONNECTED', `Disconnected ${provider} account from profile "${profile?.name || profileId}"`, { profileId, provider });
+      }
+      return result;
+    }
   );
 
-  ipcMain.handle(`${provider}:uploadSSHKey`, async (_, profileId: string) =>
-    getApiService(provider as OAuthProviderName).uploadSSHKey(profileId),
-  );
+  ipcMain.handle(`${provider}:uploadSSHKey`, async (_, profileId: string) => {
+    const result = await getApiService(provider as OAuthProviderName).uploadSSHKey(profileId);
+    if (result.success) {
+      const profile = storageService.getProfile(profileId);
+      logService.addLog('PROVIDER_KEY_UPLOADED', `Uploaded SSH key to ${provider} for profile "${profile?.name || profileId}"`, { profileId, provider, keyTitle: result.keyTitle });
+    }
+    return result;
+  });
 
   ipcMain.handle(`${provider}:checkKeyExists`, async (_, profileId: string) =>
     getApiService(provider as OAuthProviderName).checkKeyExists(profileId),

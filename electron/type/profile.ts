@@ -99,6 +99,8 @@ export interface DefaultSSHKey {
   publicPath: string;
 }
 
+import type { ActivityLog } from './log.ts';
+
 export interface ElectronAPI {
   profile: {
     create: (input: CreateProfileInput) => Promise<Profile>;
@@ -106,6 +108,11 @@ export interface ElectronAPI {
     delete: (id: string) => Promise<boolean>;
     getAll: () => Promise<Profile[]>;
     getById: (id: string) => Promise<Profile | null>;
+  };
+  log: {
+    getAll: () => Promise<ActivityLog[]>;
+    clear: () => Promise<void>;
+    clearBefore: (timestamp: number) => Promise<void>;
   };
   ssh: {
     generateKey: (params: {

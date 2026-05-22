@@ -1,3 +1,21 @@
+export type LogActionType = 
+  | 'PROFILE_CREATED' 
+  | 'PROFILE_UPDATED' 
+  | 'PROFILE_DELETED'
+  | 'SSH_KEY_GENERATED'
+  | 'SSH_KEY_IMPORTED'
+  | 'SSH_CONFIG_UPDATED'
+  | 'PROVIDER_KEY_UPLOADED'
+  | 'PROVIDER_DISCONNECTED';
+
+export interface ActivityLog {
+  id: string;
+  timestamp: number;
+  action: LogActionType;
+  message: string;
+  details?: Record<string, any>;
+}
+
 export type SSHKeyType = 'default' | 'generated' | 'existing';
 export type KeyAlgorithm = 'ed25519' | 'rsa';
 export type GitProvider = 'github' | 'gitlab' | 'bitbucket' | 'azure' | 'other';
@@ -106,6 +124,11 @@ export interface ElectronAPI {
     delete: (id: string) => Promise<boolean>;
     getAll: () => Promise<Profile[]>;
     getById: (id: string) => Promise<Profile | null>;
+  };
+  log: {
+    getAll: () => Promise<ActivityLog[]>;
+    clear: () => Promise<void>;
+    clearBefore: (timestamp: number) => Promise<void>;
   };
   ssh: {
     generateKey: (params: {

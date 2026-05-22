@@ -64,6 +64,14 @@ export class SSHConfigService {
       // Write config
       fs.writeFileSync(configPath, content, { mode: 0o600 });
 
+      // Log the event
+      import('./logService.ts').then(({ logService }) => {
+        logService.addLog('SSH_CONFIG_UPDATED', `SSH config updated for profile "${profile.name}"`, {
+          profileId: profile.id,
+          provider: profile.provider
+        });
+      });
+
       return { success: true };
     } catch (error) {
       return {

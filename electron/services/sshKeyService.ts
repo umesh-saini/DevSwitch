@@ -69,6 +69,14 @@ export class SSHKeyService {
           fs.chmodSync(`${keyPath}.pub`, 0o644);
         }
 
+        // Log the event
+        import('./logService.ts').then(({ logService }) => {
+          logService.addLog('SSH_KEY_GENERATED', `SSH key '${params.name}' generated`, {
+            keyPath,
+            algorithm: params.algorithm
+          });
+        });
+
         return {
           success: true,
           keyPath,
