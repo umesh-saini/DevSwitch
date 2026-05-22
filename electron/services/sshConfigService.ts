@@ -3,6 +3,7 @@ import * as path from 'path';
 import os from 'os';
 import { type Profile } from '../type/profile.ts';
 import { getProviderSSHConfig } from '../utils/providerUtils.ts';
+import { logService } from './logService.ts';
 
 export interface HostKeyMapping {
   host: string;
@@ -65,11 +66,9 @@ export class SSHConfigService {
       fs.writeFileSync(configPath, content, { mode: 0o600 });
 
       // Log the event
-      import('./logService.ts').then(({ logService }) => {
-        logService.addLog('SSH_CONFIG_UPDATED', `SSH config updated for profile "${profile.name}"`, {
-          profileId: profile.id,
-          provider: profile.provider
-        });
+      logService.addLog('SSH_CONFIG_UPDATED', `SSH config updated for profile "${profile.name}"`, {
+        profileId: profile.id,
+        provider: profile.provider
       });
 
       return { success: true };

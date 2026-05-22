@@ -65,12 +65,20 @@ export function ActiveLogPage() {
     }
   };
 
+  const getLocalDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleClearBefore = async (dateStr: string) => {
     if (!dateStr) return;
-    const targetTimestamp = new Date(dateStr).getTime() + 86400000; // include all of that day
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const targetTimestamp = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
     
     if (window.electronAPI?.log) {
-      const formattedDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(dateStr));
+      const formattedDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(year, month - 1, day));
       if (confirm(`Are you sure you want to delete all activity logs created BEFORE ${formattedDate}?`)) {
         try {
           await window.electronAPI.log.clearBefore(targetTimestamp);
@@ -86,16 +94,15 @@ export function ActiveLogPage() {
   const handleDeletePreset = (daysAgo: number) => {
     const date = new Date();
     date.setDate(date.getDate() - daysAgo);
-    const dateStr = date.toISOString().split('T')[0];
-    handleClearBefore(dateStr);
+    handleClearBefore(getLocalDateString(date));
   };
 
   // Date Filter Presets
   const applyDatePreset = (days: number) => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString(new Date());
     const prevDate = new Date();
     prevDate.setDate(prevDate.getDate() - days);
-    const prevStr = prevDate.toISOString().split('T')[0];
+    const prevStr = getLocalDateString(prevDate);
     
     setStartDate(prevStr);
     setEndDate(todayStr);
@@ -113,26 +120,29 @@ export function ActiveLogPage() {
     )}`;
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", jsonString);
-    downloadAnchor.setAttribute("download", `devswitch-activity-logs-${new Date().toISOString().split('T')[0]}.json`);
+    downloadAnchor.setAttribute("download", `devswitch-activity-logs-${getLocalDateString(new Date())}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
   };
 
   const exportCSV = () => {
+    const csvField = (value: unknown) =>
+      `"${String(value ?? '').replace(/"/g, '""')}"`;
+
     const headers = ['ID', 'Timestamp', 'Date', 'Action', 'Message', 'Provider', 'Details'];
     const rows = filteredLogs.map(log => {
       const logDate = new Date(log.timestamp).toISOString();
       const provider = log.details?.provider || '';
-      const details = log.details ? JSON.stringify(log.details).replace(/"/g, '""') : '';
+      const details = log.details ? JSON.stringify(log.details) : '';
       return [
         log.id,
         log.timestamp,
         logDate,
         log.action,
-        `"${log.message.replace(/"/g, '""')}"`,
-        provider,
-        `"${details}"`
+        csvField(log.message),
+        csvField(provider),
+        csvField(details)
       ];
     });
     
@@ -142,7 +152,7 @@ export function ActiveLogPage() {
     
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute("href", url);
-    downloadAnchor.setAttribute("download", `devswitch-activity-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    downloadAnchor.setAttribute("download", `devswitch-activity-logs-${getLocalDateString(new Date())}.csv`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -210,7 +220,7 @@ export function ActiveLogPage() {
         if (filterAction !== 'ALL' && log.action !== filterAction) return false;
         
         // Date filters
-        const logDateStr = new Date(log.timestamp).toISOString().split('T')[0];
+        const logDateStr = getLocalDateString(new Date(log.timestamp));
         if (startDate && logDateStr < startDate) return false;
         if (endDate && logDateStr > endDate) return false;
 

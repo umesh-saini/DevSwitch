@@ -49,6 +49,9 @@ class LogService {
   }
 
   clearLogsBefore(timestamp: number): void {
+    if (typeof timestamp !== 'number' || Number.isNaN(timestamp) || !Number.isFinite(timestamp)) {
+      return;
+    }
     const logs = this.getAllLogs();
     const filtered = logs.filter(log => log.timestamp >= timestamp);
     this.store.set('logs', filtered);
