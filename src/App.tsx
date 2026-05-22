@@ -6,6 +6,8 @@ import { CreateProfilePage } from './pages/CreateProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { ProfileViewPage } from './pages/ProfileViewPage';
 import { PermissionPage } from './pages/PermissionPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { ActiveLogPage } from './pages/ActiveLogPage';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/new" element={<CreateProfilePage />} />
           <Route path="/view/:id" element={<ProfileViewPage />} />
+          <Route path="/setting" element={<SettingsPage />} />
+          <Route path="/setting/active-log" element={<ActiveLogPage />} />
           <Route path="/:id" element={<EditProfilePage />} />
         </Routes>
       </HashRouter>

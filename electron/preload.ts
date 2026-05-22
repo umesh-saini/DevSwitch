@@ -9,6 +9,11 @@ const electronAPI: ElectronAPI = {
     getAll: () => ipcRenderer.invoke('profile:getAll'),
     getById: (id: string) => ipcRenderer.invoke('profile:getById', id),
   },
+  log: {
+    getAll: () => ipcRenderer.invoke('log:getAll'),
+    clear: () => ipcRenderer.invoke('log:clear'),
+    clearBefore: (timestamp: number) => ipcRenderer.invoke('log:clearBefore', timestamp),
+  },
   ssh: {
     generateKey: (params) => ipcRenderer.invoke('ssh:generateKey', params),
     selectExisting: () => ipcRenderer.invoke('ssh:selectExisting'),

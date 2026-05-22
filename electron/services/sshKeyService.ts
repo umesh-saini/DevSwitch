@@ -6,6 +6,7 @@ import os from 'os';
 import type { DefaultSSHKey } from '../type/profile.ts';
 
 const execAsync = promisify(exec);
+import { logService } from './logService.ts';
 
 export interface SSHKeyInfo {
   privatePath: string;
@@ -68,6 +69,12 @@ export class SSHKeyService {
         if (fs.existsSync(`${keyPath}.pub`)) {
           fs.chmodSync(`${keyPath}.pub`, 0o644);
         }
+
+        // Log the event
+        logService.addLog('SSH_KEY_GENERATED', `SSH key '${params.name}' generated`, {
+          keyPath,
+          algorithm: params.algorithm
+        });
 
         return {
           success: true,

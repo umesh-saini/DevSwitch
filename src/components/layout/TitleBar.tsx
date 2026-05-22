@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeTogglerButton } from '@/components/animate-ui/components/buttons/theme-toggler';
-import { Github, Minus, Maximize2, X, Minimize2 } from 'lucide-react';
+import { Github, Minus, Maximize2, X, Minimize2, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function TitleBar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
@@ -49,7 +53,18 @@ export function TitleBar() {
 
       {/* Right: Theme Toggle + Window Controls */}
       <div className="flex items-center gap-1">
-        <div className="app-no-drag px-2">
+        <div className="flex items-center app-no-drag px-2 gap-1.5">
+          {location.pathname !== '/setting' && location.pathname !== '/setting/active-log' && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => navigate('/setting')}
+              className="h-8 w-8 hover:bg-muted/50 rounded-md flex items-center justify-center transition-colors"
+              aria-label="Settings"
+            >
+              <Settings className="w-4 h-4 hover:text-foreground" />
+            </Button>
+          )}
           <ThemeTogglerButton variant="ghost" size="sm" />
         </div>
         
