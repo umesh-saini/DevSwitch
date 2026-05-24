@@ -59,7 +59,7 @@ export function TitleBar() {
               variant="ghost"
               size="icon-sm"
               onClick={() => navigate('/setting')}
-              className="h-8 w-8 hover:bg-muted/50 rounded-md flex items-center justify-center transition-colors"
+              className="h-8 w-8 hover:bg-primary rounded-md flex items-center justify-center transition-colors"
               aria-label="Settings"
             >
               <Settings className="w-4 h-4 hover:text-foreground" />
