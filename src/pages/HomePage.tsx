@@ -12,7 +12,7 @@ import { Button } from '@/components/animate-ui/components/buttons/button';
 import { useProfileStore } from '@/stores/profileStore';
 import type { Profile } from '@/types/profile';
 import { electronService } from '@/services/electronService';
-import { Plus, Loader2, RefreshCw } from 'lucide-react';
+import { Plus, Loader2, RefreshCw, FileText } from 'lucide-react';
 import { useSettingsStore } from '@/stores/settingsStore';
 
 interface DefaultProfile {
@@ -188,6 +188,10 @@ export function HomePage() {
                   {isSyncing ? 'Syncing...' : 'Sync'}
                 </Button>
               )}
+              <Button onClick={() => navigate('/ssh-config')} variant="secondary">
+                <FileText className="w-4 h-4 mr-2" />
+                Edit SSH Config
+              </Button>
               <Button onClick={() => navigate('/new')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Profile
