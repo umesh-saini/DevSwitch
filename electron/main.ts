@@ -563,6 +563,12 @@ ipcMain.handle("sync:scanAndSync", async () => {
       // Generate profile name
       const profileName = `${username} (Synced)`;
 
+      // Assign default customization options (color and avatar) for synced profiles
+      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+      const emojis = ['👤', '💻', '🚀', '🔑', '💼', '🎯', '🌟', '💡'];
+      const color = colors[syncedProfiles.length % colors.length];
+      const avatar = emojis[syncedProfiles.length % emojis.length];
+
       // Create profile
       const profile: Profile = {
         id: uuidv4(),
@@ -578,6 +584,8 @@ ipcMain.handle("sync:scanAndSync", async () => {
         hasPassphrase: false,
         passphraseEncrypted: null,
         hostConfigured: hostMapping ? true : false,
+        avatar: avatar,
+        color: color,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
