@@ -15,39 +15,25 @@ import type {
   UpdateProfileInput,
 } from "./type/profile.ts";
 import { sshKeyService } from "./services/sshKeyService.ts";
-import { sshAgentService } from "./services/sshAgentService.ts";
 import { sshConfigService } from "./services/sshConfigService.ts";
 import { sshConfigParserService } from "./services/sshConfigParserService.ts";
 import { encryptPassphrase } from "./utils/encryption.ts";
 import { getOAuthService, getApiService } from "./services/index.ts";
 import { gitService } from "./services/gitService.ts";
+import { updaterService } from "./services/updaterService.ts";
 import {
   checkSSHPermissions,
   openMacPermissionSettings,
 } from "./utils/permissionCheck.ts";
 import {
-  getProviderSSHConfig,
   isSSHAuthSuccess,
 } from "./utils/providerUtils.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Helper Variables
-const isWindows = os.platform() === "win32";
-const isMac = os.platform() === "darwin";
-const isLinux = os.platform() === "linux";
-
-const system = isLinux
-  ? "Linux"
-  : isMac
-    ? "Mac"
-    : isWindows
-      ? "Windows"
-      : "N/A";
-
-// TODO: Set to false for production
-const isDev = process.env.NODE_ENV === "development"; // false
+import { isWindows, isMac, isLinux, system, isDev } from "./utils/environment.ts";
+import { sshAgentService } from "./services/sshAgentService.ts";
 
 let mainWindow: BrowserWindow | null = null;
 let permissionWindow: BrowserWindow | null = null;
@@ -72,6 +58,8 @@ const createWindow = () => {
       devTools: isDev,
     },
   });
+
+  updaterService.setWindow(mainWindow);
 
   // Remove menu bar
   mainWindow.setMenu(null);
@@ -135,7 +123,7 @@ app.whenReady().then(async () => {
   const permResult = checkSSHPermissions();
   console.log(
     `[DevSwitch] SSH permission check → granted: ${permResult.granted}, ` +
-      `status: ${permResult.status}, platform: ${permResult.platform}`,
+    `status: ${permResult.status}, platform: ${permResult.platform}`,
   );
 
   if (!permResult.granted) {
@@ -333,7 +321,7 @@ ipcMain.handle("profile:delete", async (_, id: string): Promise<boolean> => {
     if (profile.sshKeyType === "generated" && profile.keyPath) {
       sshKeyService.deleteKey(profile.keyPath);
     }
-    
+
     logService.addLog('PROFILE_DELETED', `Profile "${profile.name}" deleted`, {
       profileId: profile.id,
       provider: profile.provider
@@ -752,4 +740,22 @@ ipcMain.handle("git:getProjectConfig", async (_, projectPath: string) => {
 
 ipcMain.handle("git:getProjectRemotes", async (_, projectPath: string) => {
   return await gitService.getProjectRemotes(projectPath);
+});
+
+// App Handlers
+ipcMain.handle("app:getVersion", () => {
+  return app.getVersion();
+});
+
+// Updater Handlers
+ipcMain.handle("updater:check", async () => {
+  await updaterService.checkForUpdates();
+});
+
+ipcMain.handle("updater:download", () => {
+  updaterService.downloadUpdate();
+});
+
+ipcMain.handle("updater:install", () => {
+  updaterService.installUpdate();
 });

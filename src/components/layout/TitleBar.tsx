@@ -8,6 +8,8 @@ export function TitleBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMaximized, setIsMaximized] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'not-available' | 'error' | 'progress' | 'downloaded'>('idle');
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
 
   useEffect(() => {
     // Check if running in Electron
@@ -26,6 +28,27 @@ export function TitleBar() {
     }
   }, []);
 
+  useEffect(() => {
+    if (window.electronAPI?.updater) {
+      const unsubscribe = window.electronAPI.updater.onStatus((status, data) => {
+        setUpdateStatus(status as any);
+        if (status === 'progress' && data) {
+          setDownloadProgress(data.percent || 0);
+        }
+      });
+      
+      // Check for updates shortly after app starts
+      const timeoutId = setTimeout(() => {
+        window.electronAPI.updater.check();
+      }, 3000);
+
+      return () => {
+        unsubscribe();
+        clearTimeout(timeoutId);
+      };
+    }
+  }, []);
+
   const handleMinimize = () => {
     window.electronAPI?.window?.minimize();
   };
@@ -36,6 +59,35 @@ export function TitleBar() {
 
   const handleClose = () => {
     window.electronAPI?.window?.close();
+  };
+
+  const handleUpdateAction = () => {
+    if (updateStatus === 'available') {
+      window.electronAPI?.updater?.download();
+    } else if (updateStatus === 'downloaded') {
+      window.electronAPI?.updater?.install();
+    }
+  };
+
+  const renderUpdateUI = () => {
+    if (updateStatus === 'idle' || updateStatus === 'not-available' || updateStatus === 'checking') return null;
+
+    if (updateStatus === 'error') {
+       return <span className="text-xs text-red-500 mr-2 flex items-center h-8">Update Error</span>;
+    }
+
+    return (
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={handleUpdateAction}
+        className="h-7 text-[10px] px-2.5 mr-2 bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20 rounded-full font-medium"
+      >
+        {updateStatus === 'available' && "Update Available"}
+        {updateStatus === 'progress' && `Downloading ${Math.round(downloadProgress)}%`}
+        {updateStatus === 'downloaded' && "Restart to Install"}
+      </Button>
+    );
   };
 
   return (
@@ -54,6 +106,7 @@ export function TitleBar() {
       {/* Right: Theme Toggle + Window Controls */}
       <div className="flex items-center gap-1">
         <div className="flex items-center app-no-drag px-2 gap-1.5">
+          {renderUpdateUI()}
           {location.pathname !== '/setting' && location.pathname !== '/setting/active-log' && (
             <Button
               variant="ghost"

@@ -39,6 +39,7 @@ export function SettingsPage() {
   const [permissions, setPermissions] = useState<any>(null);
   const [checkingPerms, setCheckingPerms] = useState(false);
   const [logCount, setLogCount] = useState(0);
+  const [appVersion, setAppVersion] = useState('1.0.0');
 
   // Tab State: 'general' or 'ssh'
   const [activeTab, setActiveTab] = useState<'general' | 'ssh'>('general');
@@ -52,6 +53,7 @@ export function SettingsPage() {
   useEffect(() => {
     checkPermissions();
     fetchLogCount();
+    fetchAppVersion();
   }, []);
 
   useEffect(() => {
@@ -81,6 +83,17 @@ export function SettingsPage() {
         setLogCount(logs.length);
       } catch (err) {
         console.error('Failed to fetch logs:', err);
+      }
+    }
+  };
+
+  const fetchAppVersion = async () => {
+    if (window.electronAPI?.app) {
+      try {
+        const version = await window.electronAPI.app.getVersion();
+        setAppVersion(version);
+      } catch (err) {
+        console.error('Failed to fetch app version:', err);
       }
     }
   };
@@ -389,7 +402,7 @@ export function SettingsPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold">DevSwitch</h4>
-                    <p className="text-xs text-muted-foreground">Version 1.0.0 (Beta)</p>
+                    <p className="text-xs text-muted-foreground">Version {appVersion}</p>
                     <p className="text-xs text-muted-foreground pt-1">
                       Made as an open-source tool for professional developer profiles switching.
                     </p>

@@ -211,6 +211,15 @@ export interface ElectronAPI {
     uploadSSHKey: (profileId: string) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
     checkKeyExists: (profileId: string) => Promise<{ exists: boolean; error?: string }>;
   };
+  app: {
+    getVersion: () => Promise<string>;
+  };
+  updater: {
+    check: () => Promise<void>;
+    download: () => Promise<void>;
+    install: () => Promise<void>;
+    onStatus: (callback: (status: 'checking' | 'available' | 'not-available' | 'error' | 'progress' | 'downloaded', data?: any) => void) => () => void;
+  };
   permissions: {
     /** Check current SSH folder access status. */
     check: () => Promise<PermissionCheckResult>;

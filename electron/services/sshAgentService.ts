@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import os from 'os';
 import * as fs from 'fs';
+import { isWindows } from '../utils/environment.ts';
 
 const execAsync = promisify(exec);
 
@@ -18,8 +18,6 @@ export class SSHAgentService {
           error: `SSH key not found at ${params.keyPath}`,
         };
       }
-
-      const isWindows = os.platform() === 'win32';
 
       if (isWindows) {
         return await this.addKeyToAgentWindows(params);
@@ -57,7 +55,7 @@ export class SSHAgentService {
 
       // Add key to agent
       let command: string;
-      
+
       if (params.passphrase) {
         // Use expect or ssh-add with passphrase
         command = `echo "${params.passphrase}" | ssh-add "${params.keyPath}"`;

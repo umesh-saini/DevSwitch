@@ -1,6 +1,8 @@
-export type LogActionType = 
-  | 'PROFILE_CREATED' 
-  | 'PROFILE_UPDATED' 
+export type LogActionType =
+  | 'APP_UPDATE'
+  | 'APP_UPDATE_ERROR'
+  | 'PROFILE_CREATED'
+  | 'PROFILE_UPDATED'
   | 'PROFILE_DELETED'
   | 'SSH_KEY_GENERATED'
   | 'SSH_KEY_IMPORTED'

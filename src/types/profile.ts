@@ -1,6 +1,8 @@
-export type LogActionType = 
-  | 'PROFILE_CREATED' 
-  | 'PROFILE_UPDATED' 
+export type LogActionType =
+  | 'APP_UPDATE'
+  | 'APP_UPDATE_ERROR'
+  | 'PROFILE_CREATED'
+  | 'PROFILE_UPDATED'
   | 'PROFILE_DELETED'
   | 'SSH_KEY_GENERATED'
   | 'SSH_KEY_IMPORTED'
@@ -226,6 +228,15 @@ export interface ElectronAPI {
     disconnectAccount: (profileId: string) => Promise<{ success: boolean; error?: string }>;
     uploadSSHKey: (profileId: string) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
     checkKeyExists: (profileId: string) => Promise<{ exists: boolean; error?: string }>;
+  };
+  app: {
+    getVersion: () => Promise<string>;
+  };
+  updater: {
+    check: () => Promise<void>;
+    download: () => Promise<void>;
+    install: () => Promise<void>;
+    onStatus: (callback: (status: 'checking' | 'available' | 'not-available' | 'error' | 'progress' | 'downloaded', data?: any) => void) => () => void;
   };
   permissions: {
     check: () => Promise<PermissionCheckResult>;

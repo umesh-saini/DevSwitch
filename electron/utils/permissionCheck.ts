@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { createRequire } from 'module';
+import { isMac, isWindows } from './environment.ts';
 
 // Use createRequire to load native CommonJS modules (like node-mac-permissions) in ESM context
 const _require = createRequire(import.meta.url);
@@ -27,11 +28,9 @@ const sshDir = path.join(os.homedir(), '.ssh');
  * Windows/Linux → directly probes file-system read/write access on ~/.ssh.
  */
 export function checkSSHPermissions(): PermissionCheckResult {
-  const platform = os.platform();
-
-  if (platform === 'darwin') {
+  if (isMac) {
     return checkMacPermissions();
-  } else if (platform === 'win32') {
+  } else if (isWindows) {
     return checkFileSystemPermissions('windows');
   } else {
     return checkFileSystemPermissions('linux');
@@ -106,7 +105,7 @@ function checkFileSystemPermissions(platform: AppPlatform): PermissionCheckResul
  * can manually add DevSwitch. No-op on Windows / Linux.
  */
 export function openMacPermissionSettings(): void {
-  if (os.platform() !== 'darwin') return;
+  if (!isMac) return;
 
   try {
     const nodeMacPermissions = _require('node-mac-permissions');

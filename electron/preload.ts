@@ -72,6 +72,19 @@ const electronAPI: ElectronAPI = {
     uploadSSHKey: (profileId: string) => ipcRenderer.invoke('azure:uploadSSHKey', profileId),
     checkKeyExists: (profileId: string) => ipcRenderer.invoke('azure:checkKeyExists', profileId),
   },
+  app: {
+    getVersion: () => ipcRenderer.invoke('app:getVersion'),
+  },
+  updater: {
+    check: () => ipcRenderer.invoke('updater:check'),
+    download: () => ipcRenderer.invoke('updater:download'),
+    install: () => ipcRenderer.invoke('updater:install'),
+    onStatus: (callback) => {
+      const handler = (_event: any, status: any, data: any) => callback(status, data);
+      ipcRenderer.on('updater:status', handler);
+      return () => ipcRenderer.removeListener('updater:status', handler);
+    }
+  },
   permissions: {
     check: (): Promise<PermissionCheckResult> => ipcRenderer.invoke('permission:check'),
     openSettings: (): Promise<void> => ipcRenderer.invoke('permission:openSettings'),
