@@ -1,0 +1,49 @@
+{
+  "name": "devswitch-cli",
+  "version": "1.0.1",
+  "description": "Standalone command-line tool for DevSwitch — manage multiple Git profiles and SSH keys. Shares its database with the DevSwitch desktop app.",
+  "type": "module",
+  "bin": {
+    "devswitch": "./bin/devswitch.cjs"
+  },
+  "files": [
+    "bin/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node ./build.mjs",
+    "dev": "node --experimental-strip-types ./src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "git",
+    "ssh",
+    "ssh-keys",
+    "profile",
+    "cli",
+    "devswitch"
+  ],
+  "author": {
+    "name": "umesh-saini",
+    "email": "umeshsaini8085@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/umesh-saini/DevSwitch/tree/main/cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/umesh-saini/DevSwitch.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/umesh-saini/DevSwitch/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
