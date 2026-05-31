@@ -233,15 +233,19 @@
 ## 📸 Screenshots
 
 ### Home Page
+
 ![Home Page](public/home.png)
 
 ### Create Profile Page
+
 ![Create Profile](public/create-page.png)
 
 ### Edit Profile Page
+
 ![Edit Profile](public/edit-page.png)
 
 ### View Profile Page
+
 ![View Profile](public/vide-page.png)
 
 ---
@@ -258,17 +262,20 @@
 ### Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/umesh-saini/devswitch.git
    cd devswitch
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Run in development mode**
+
    ```bash
    # Terminal 1: Start Vite dev server
    npm run dev
@@ -330,6 +337,7 @@
      ```
 
 3. **Restart the Application**
+
    ```bash
    npm run dev
    npm run electron:dev
@@ -356,16 +364,19 @@
 ### Using the SSH Configuration
 
 The generated SSH host alias will be in the format:
+
 ```
 github.com-username
 ```
 
 To clone a repository using your specific profile:
+
 ```bash
 git clone git@github.com-username:repository/name.git
 ```
 
 To set the remote URL for an existing repository:
+
 ```bash
 git remote set-url origin git@github.com-username:repository/name.git
 ```
@@ -392,55 +403,141 @@ Each profile has its own SSH host alias. Simply use the appropriate host when cl
 
 ---
 
+## 🖥️ Command-Line Tool (`devswitch`)
+
+DevSwitch ships with a standalone CLI that manages the same profiles as the
+desktop app. It runs on **Windows, macOS, and Linux** (anything with
+**Node.js ≥ 18**) and works **with or without** the desktop app installed — both
+read and write the same database, so there are no conflicts and install order
+doesn't matter.
+
+### Install
+
+```bash
+# A) npm — the simplest cross-platform way (Windows/macOS/Linux)
+#    npm puts `devswitch` on your PATH automatically; no manual PATH editing.
+npm install -g devswitch-cli
+
+# B) Bundled with the desktop app — the Linux .deb auto-installs `devswitch`
+devswitch help
+
+# C) Standalone, one-line install (served by the distribution site)
+curl -sSL https://<your-app-host>/init/cli.sh | bash
+```
+
+For local development from this repo:
+
+```bash
+npm run cli:link     # builds + `npm link` so the `devswitch` command points at your build
+```
+
+> **PATH is handled for you.** With `npm install -g` / `npm link`, npm creates the
+> right entry on every OS (a symlink on macOS/Linux, a `.cmd`/`.ps1` shim on
+> Windows) inside npm's global bin directory, which is already on your PATH.
+> No manual environment-variable or symlink setup required.
+>
+> If a standalone CLI is already installed, the app installer won't overwrite it.
+
+### Common commands
+
+```bash
+devswitch help                 # full command reference
+devswitch list                 # list all profiles            (alias: ls)
+devswitch use <profile>        # switch profile               (alias: switch)
+devswitch current              # show the active profile      (alias: whoami)
+devswitch add                  # create a profile             (alias: create)
+devswitch remove <profile>     # delete a profile             (alias: rm)
+devswitch show <profile>       # full details                 (alias: view)
+devswitch sync                 # import unmanaged SSH keys
+devswitch test <profile>       # test SSH authentication
+devswitch pubkey <profile>     # print public key (pipe-friendly)
+devswitch clone <url> [dir] --profile <name>   # clone with a profile's identity
+devswitch logs                 # recent activity (app + CLI)
+devswitch doctor               # diagnose environment & data store
+devswitch path                 # show the shared data directory
+```
+
+`<profile>` matches a name, username, email, or id (partial, case-insensitive).
+Add `--json` to most commands for scriptable output.
+
+See **[cli/README.md](cli/README.md)** for the complete reference.
+
+### Shared data store
+
+| Platform | Location                                   |
+| -------- | ------------------------------------------ |
+| Linux    | `~/.config/devswitch/`                     |
+| macOS    | `~/Library/Application Support/devswitch/` |
+| Windows  | `%APPDATA%\devswitch\`                     |
+
+Override with `DEVSWITCH_DATA_DIR`. On first run, profiles from older
+electron-store locations are migrated automatically (once, non-destructively).
+
+---
+
 ## 🏗️ Architecture
 
 ### Project Structure
 
 ```
 devswitch/
+├── core/                        # 🔑 Shared library (no Electron) — used by BOTH app & CLI
+│   ├── index.ts                # Public barrel export
+│   ├── types.ts                # Shared domain types (Profile, inputs, …)
+│   ├── paths.ts                # Cross-platform shared data dir resolution
+│   ├── jsonStore.ts            # Atomic JSON store (replaces electron-store)
+│   ├── type/log.ts             # Activity log types
+│   ├── services/               # Shared business logic
+│   │   ├── profileManager.ts   # create/update/delete/switch/sync orchestration
+│   │   ├── storageService.ts   # Profile persistence (+ legacy migration)
+│   │   ├── logService.ts       # Activity log (+ legacy migration)
+│   │   ├── sshKeyService.ts     # SSH key operations
+│   │   ├── sshAgentService.ts   # ssh-agent integration
+│   │   ├── sshConfigService.ts  # ~/.ssh/config management
+│   │   ├── sshTestService.ts    # SSH connection test
+│   │   └── gitService.ts        # git clone / remote / config
+│   └── utils/                  # encryption, environment, providerUtils
+├── cli/                         # 🖥️ Standalone `devswitch` command-line tool
+│   ├── src/                    # CLI source (commands, args, prompts, ui)
+│   │   ├── index.ts            # Entry + command router
+│   │   └── commands/           # One file per command (list, use, add, …)
+│   ├── build.mjs               # esbuild bundler → bin/devswitch.cjs
+│   ├── bin/devswitch.cjs       # Built self-contained bundle (generated)
+│   ├── package.json            # Publishable as `devswitch-cli`
+│   └── README.md               # CLI documentation
 ├── electron/                    # Electron main process
-│   ├── main.ts                 # Application entry point
+│   ├── main.ts                 # App entry — IPC handlers delegate to core
 │   ├── preload.ts              # Preload script for IPC
-│   ├── services/               # Backend services
-│   │   ├── sshAgentService.ts  # SSH agent integration
-│   │   ├── sshConfigService.ts # SSH config file management
-│   │   ├── sshKeyService.ts    # SSH key operations
-│   │   └── storageService.ts   # Data persistence
-│   ├── type/                   # TypeScript types
-│   │   └── profile.ts          # Profile & API types
-│   └── utils/
-│       └── encryption.ts       # Passphrase encryption
-├── src/                        # React frontend
+│   ├── services/               # Thin re-exports of core services
+│   ├── type/                   # Re-exports of core types + ElectronAPI
+│   └── utils/                  # Re-exports of core utils
+├── src/                        # React frontend (renderer)
 │   ├── components/             # React components
 │   │   ├── animate-ui/         # Animated UI components
-│   │   ├── layout/             # Layout components
-│   │   │   ├── AppShell.tsx    # Main layout wrapper
-│   │   │   └── TitleBar.tsx    # Custom title bar
+│   │   ├── layout/             # AppShell, TitleBar
 │   │   ├── profiles/           # Profile-related components
 │   │   └── ui/                 # Base UI components
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Utility functions
-│   ├── pages/                  # Page components
-│   │   ├── HomePage.tsx        # Main dashboard
-│   │   ├── CreateProfilePage.tsx
-│   │   ├── EditProfilePage.tsx
-│   │   └── ProfileViewPage.tsx
-│   ├── services/               # Frontend services
-│   │   └── electronService.ts  # IPC communication wrapper
-│   ├── stores/                 # State management
-│   │   └── profileStore.ts     # Zustand store for profiles
-│   ├── types/                  # Frontend types
+│   ├── hooks/ lib/ pages/      # Hooks, utils, page components
+│   ├── services/               # electronService.ts (IPC wrapper)
+│   ├── stores/                 # Zustand stores
 │   └── App.tsx                 # Root component
+├── build/linux/                # deb afterInstall/afterRemove hooks (auto-install CLI)
 ├── public/                     # Static assets
 ├── package.json                # Dependencies and scripts
 ├── vite.config.ts              # Vite configuration
-├── tsconfig.json               # TypeScript configuration
 └── README.md                   # This file
 ```
+
+> **Shared database:** the desktop app and the CLI both read/write the same
+> JSON store (`~/.config/devswitch/` on Linux, `~/Library/Application Support/devswitch/`
+> on macOS, `%APPDATA%\devswitch\` on Windows). All profile logic lives in
+> `core/services/profileManager.ts`, so both entry points behave identically and
+> never conflict. See [cli/README.md](cli/README.md) for the full CLI reference.
 
 ### Technology Stack
 
 **Frontend:**
+
 - ⚛️ **React 19.2.0** - UI framework
 - 📘 **TypeScript 5.9.3** - Type safety
 - 🎨 **Tailwind CSS 4.1.18** - Utility-first CSS
@@ -450,13 +547,21 @@ devswitch/
 - 🗺️ **React Router** - Client-side routing
 - 🐻 **Zustand** - State management
 
-**Backend:**
+**Backend / Shared core:**
+
 - 🖥️ **Electron 40.2.1** - Desktop app framework
-- 📦 **electron-store** - Encrypted data persistence
-- 🔐 **Node.js crypto** - Passphrase encryption
+- 🧩 **`core/` shared library** - Electron-independent business logic (app + CLI)
+- 📦 **Plain JSON store** - atomic, dependency-free shared persistence
+- 🔐 **Node.js crypto** - Passphrase & token encryption (machine-bound AES-256-GCM)
 - 🔑 **OpenSSH** - SSH key generation and management
 
+**CLI:**
+
+- 🖥️ **`devswitch` command** - standalone, shares the app's database
+- ⚡ **esbuild** - bundles the CLI into a single Node ≥18 file
+
 **Development:**
+
 - ⚡ **Vite 7.2.4** - Build tool and dev server
 - 🔧 **ESLint** - Code linting
 - 📝 **Prettier** - Code formatting (via ESLint)
@@ -480,6 +585,12 @@ npm run build
 # Build Electron app
 npm run electron:build
 
+# Build the standalone CLI bundle (cli/bin/devswitch.cjs)
+npm run cli:build
+
+# Install the CLI on your PATH for local development (npm link)
+npm run cli:link
+
 # Run linter
 npm run lint
 
@@ -490,11 +601,13 @@ npm run preview
 ### Development Workflow
 
 1. **Start the dev server** in one terminal:
+
    ```bash
    npm run dev
    ```
 
 2. **Start Electron** in another terminal:
+
    ```bash
    npm run electron:dev
    ```
@@ -505,18 +618,21 @@ npm run preview
 ### Project Configuration
 
 **Vite Configuration** (`vite.config.ts`):
+
 - React plugin for JSX support
 - SVGR plugin for SVG-as-component imports
 - Tailwind CSS v4 via `@tailwindcss/vite`
 - Path aliases for cleaner imports
 
 **TypeScript Configuration**:
+
 - Strict mode enabled
 - ES2022 target
 - Module resolution: bundler
 - Path mappings for `@/` imports
 
 **Tailwind Configuration**:
+
 - v4 using CSS imports
 - Custom theme via `@layer` directives
 - Dark mode using `class` strategy
@@ -637,6 +753,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📧 Support
 
 For bugs, feature requests, or questions:
+
 - Open an [Issue](https://github.com/umesh-saini/devswitch/issues)
 - Start a [Discussion](https://github.com/umesh-saini/devswitch/discussions)
 
@@ -657,30 +774,36 @@ For bugs, feature requests, or questions:
 ### Scenario 1: Freelancer with Multiple Clients
 
 **Morning: Switch to "Client A" profile**
+
 - SSH key: `~/.ssh/client_a`
 - Git: John Doe <john@client-a.com>
 
 **Afternoon: Switch to "Client B" profile**
+
 - SSH key: `~/.ssh/client_b`
 - Git: John Doe <john@client-b.com>
 
 ### Scenario 2: Work + Personal Projects
 
 **Work hours: "Work" profile active**
+
 - Corporate SSH key
 - Work email configured
 
 **Evening: Switch to "Personal"**
+
 - Personal GitHub key
 - Personal email for commits
 
 ### Scenario 3: Open Source + Private Projects
 
 **Open source contributions: "Open Source" profile**
+
 - Public SSH key
 - Public email
 
 **Private projects: "Private" profile**
+
 - Private SSH key
 - Private email
 
