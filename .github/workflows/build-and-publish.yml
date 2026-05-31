@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24.15.0
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -60,7 +60,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24.15.0
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -68,6 +68,9 @@ jobs:
 
       - name: Install CLI dependencies
         run: npm --prefix cli ci || npm --prefix cli install
+
+      - name: Build Web Assets
+        run: npm run build
 
       - name: Build and Publish Electron App
         env:

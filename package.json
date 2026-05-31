@@ -111,13 +111,18 @@
     },
     "publish": [
       {
-        "provider": "generic",
-        "url": "https://localhost:3000/downloads/"
+        "provider": "github",
+        "owner": "umesh-saini",
+        "repo": "DevSwitch"
       }
     ]
   },
   "author": {
     "name": "umesh-saini",
     "email": "umeshsaini8085@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/umesh-saini/DevSwitch.git"
   }
 }
