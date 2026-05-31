@@ -3,12 +3,12 @@ name: Build and Release
 on:
   push:
     branches:
-      - 'release/v*'
+      - "release/v*"
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
-      - 'release/v*'
+      - "release/v*"
     types:
       - closed
 
@@ -28,10 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24.15.0
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install CLI dependencies
+        run: npm --prefix cli ci || npm --prefix cli install
 
       - name: Build Web Assets
         run: npm run build
@@ -58,10 +61,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24.15.0
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install CLI dependencies
+        run: npm --prefix cli ci || npm --prefix cli install
 
       - name: Build and Publish Electron App
         env:
