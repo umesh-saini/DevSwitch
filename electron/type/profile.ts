@@ -1,106 +1,34 @@
-export type SSHKeyType = 'default' | 'generated' | 'existing';
-export type KeyAlgorithm = 'ed25519' | 'rsa';
-export type GitProvider = 'github' | 'gitlab' | 'bitbucket' | 'azure' | 'other';
-import type { SSHConfigEntry } from '../../src/types/sshConfig.ts';
-
 /**
- * Generic provider connection metadata.
- * This replaces the old github-prefixed fields and works for any provider.
+ * Domain types are now owned by the shared core library so the desktop app and
+ * the `devswitch` CLI stay in sync. This file re-exports them and keeps the
+ * Electron-specific `ElectronAPI` IPC contract.
  */
-export interface ProviderConnectionMeta {
-  connected: boolean;
-  accessTokenEncrypted: string | null;
-  username: string | null;
-  sshKeyAdded: boolean;
-}
+export type {
+  SSHKeyType,
+  KeyAlgorithm,
+  GitProvider,
+  ProviderConnectionMeta,
+  PermissionStatus,
+  AppPlatform,
+  PermissionCheckResult,
+  Profile,
+  CreateProfileInput,
+  UpdateProfileInput,
+  SSHKeyGenerationResult,
+  DefaultSSHKey,
+} from "../../core/types.ts";
 
-// ── Permission types ──────────────────────────────────────────────────────────
-export type PermissionStatus = 'authorized' | 'denied' | 'not-determined' | 'restricted';
-export type AppPlatform = 'mac' | 'windows' | 'linux';
-
-export interface PermissionCheckResult {
-  granted: boolean;
-  status: PermissionStatus;
-  platform: AppPlatform;
-  details?: string;
-}
-
-export interface Profile {
-  id: string;
-  name: string;
-  email: string;
-  username: string;
-  sshKeyType: SSHKeyType;
-  keyPath: string | null;
-  keyAlgorithm: KeyAlgorithm | null;
-  hasPassphrase: boolean;
-  passphraseEncrypted: string | null;
-  hostConfigured: boolean;
-  createdAt: number;
-  updatedAt: number;
-  // Customization fields
-  avatar?: string; // emoji or icon name
-  color?: string; // hex color for theme
-  tags?: string[]; // tags for filtering
-  // Git provider (defaults to 'github' for backward-compat)
-  provider?: GitProvider;
-  /**
-   * Provider-agnostic OAuth connection metadata.
-   * Written by all provider OAuth services. Read by the frontend via providerMeta.
-   */
-  providerMeta?: ProviderConnectionMeta;
-  // ── Legacy GitHub-specific fields (kept for backward-compat with stored profiles) ──
-  /** @deprecated Use providerMeta instead */
-  githubConnected?: boolean;
-  /** @deprecated Use providerMeta instead */
-  githubAccessTokenEncrypted?: string | null;
-  /** @deprecated Use providerMeta instead */
-  githubUsername?: string | null;
-  /** @deprecated Use providerMeta instead */
-  sshKeyAddedToGithub?: boolean;
-}
-
-export interface CreateProfileInput {
-  name: string;
-  email: string;
-  username: string;
-  sshKeyType: SSHKeyType;
-  provider?: GitProvider;
-  keyAlgorithm?: KeyAlgorithm;
-  keyName?: string;
-  passphrase?: string;
-  existingKeyPath?: string;
-}
-
-export interface UpdateProfileInput {
-  id: string;
-  name?: string;
-  email?: string;
-  username?: string;
-  sshKeyType?: SSHKeyType;
-  provider?: GitProvider;
-  keyAlgorithm?: KeyAlgorithm;
-  keyName?: string;
-  passphrase?: string;
-  existingKeyPath?: string;
-  avatar?: string;
-  color?: string;
-  tags?: string[];
-}
-
-export interface SSHKeyGenerationResult {
-  success: boolean;
-  keyPath?: string;
-  error?: string;
-}
-
-export interface DefaultSSHKey {
-  algorithm: KeyAlgorithm;
-  privatePath: string;
-  publicPath: string;
-}
-
-import type { ActivityLog } from './log.ts';
+import type {
+  Profile,
+  CreateProfileInput,
+  UpdateProfileInput,
+  SSHKeyGenerationResult,
+  DefaultSSHKey,
+  KeyAlgorithm,
+  PermissionCheckResult,
+} from "../../core/types.ts";
+import type { SSHConfigEntry } from "../../src/types/sshConfig.ts";
+import type { ActivityLog } from "./log.ts";
 
 export interface ElectronAPI {
   profile: {
@@ -127,7 +55,9 @@ export interface ElectronAPI {
       passphrase?: string;
     }) => Promise<{ success: boolean; error?: string }>;
     checkDefaultKeys: () => Promise<DefaultSSHKey[]>;
-    getPublicKey: (privateKeyPath: string) => Promise<{ content: string | null; error?: string }>;
+    getPublicKey: (
+      privateKeyPath: string,
+    ) => Promise<{ content: string | null; error?: string }>;
     testConnection: (params: {
       hostAlias: string;
       sshUser: string;
@@ -137,14 +67,21 @@ export interface ElectronAPI {
   sshConfig: {
     update: (profile: Profile) => Promise<{ success: boolean; error?: string }>;
     read: () => Promise<{ content: string; error?: string }>;
-    getHostAlias: (keyPath: string) => Promise<{ hostAlias: string | null; error?: string }>;
+    getHostAlias: (
+      keyPath: string,
+    ) => Promise<{ hostAlias: string | null; error?: string }>;
   };
   sshConfigEditor: {
     read: () => Promise<{ entries: SSHConfigEntry[]; error?: string }>;
-    save: (entries: SSHConfigEntry[]) => Promise<{ success: boolean; error?: string }>;
+    save: (
+      entries: SSHConfigEntry[],
+    ) => Promise<{ success: boolean; error?: string }>;
   };
   git: {
-    getGlobalConfig: () => Promise<{ config: { [key: string]: string }; error?: string }>;
+    getGlobalConfig: () => Promise<{
+      config: { [key: string]: string };
+      error?: string;
+    }>;
     selectFolder: () => Promise<{ folderPath: string } | null>;
     cloneRepository: (params: {
       repoUrl: string;
@@ -168,7 +105,7 @@ export interface ElectronAPI {
     }>;
     getProjectRemotes: (projectPath: string) => Promise<{
       success: boolean;
-      remotes?: Array<{ name: string; url: string; type: 'fetch' | 'push' }>;
+      remotes?: Array<{ name: string; url: string; type: "fetch" | "push" }>;
       error?: string;
     }>;
   };
@@ -188,28 +125,60 @@ export interface ElectronAPI {
     isMaximized: () => Promise<boolean>;
   };
   github: {
-    startOAuth: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    disconnectAccount: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    uploadSSHKey: (profileId: string) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
-    checkKeyExists: (profileId: string) => Promise<{ exists: boolean; error?: string }>;
+    startOAuth: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    disconnectAccount: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    uploadSSHKey: (
+      profileId: string,
+    ) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
+    checkKeyExists: (
+      profileId: string,
+    ) => Promise<{ exists: boolean; error?: string }>;
   };
   gitlab: {
-    startOAuth: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    disconnectAccount: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    uploadSSHKey: (profileId: string) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
-    checkKeyExists: (profileId: string) => Promise<{ exists: boolean; error?: string }>;
+    startOAuth: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    disconnectAccount: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    uploadSSHKey: (
+      profileId: string,
+    ) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
+    checkKeyExists: (
+      profileId: string,
+    ) => Promise<{ exists: boolean; error?: string }>;
   };
   bitbucket: {
-    startOAuth: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    disconnectAccount: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    uploadSSHKey: (profileId: string) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
-    checkKeyExists: (profileId: string) => Promise<{ exists: boolean; error?: string }>;
+    startOAuth: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    disconnectAccount: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    uploadSSHKey: (
+      profileId: string,
+    ) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
+    checkKeyExists: (
+      profileId: string,
+    ) => Promise<{ exists: boolean; error?: string }>;
   };
   azure: {
-    startOAuth: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    disconnectAccount: (profileId: string) => Promise<{ success: boolean; error?: string }>;
-    uploadSSHKey: (profileId: string) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
-    checkKeyExists: (profileId: string) => Promise<{ exists: boolean; error?: string }>;
+    startOAuth: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    disconnectAccount: (
+      profileId: string,
+    ) => Promise<{ success: boolean; error?: string }>;
+    uploadSSHKey: (
+      profileId: string,
+    ) => Promise<{ success: boolean; keyTitle?: string; error?: string }>;
+    checkKeyExists: (
+      profileId: string,
+    ) => Promise<{ exists: boolean; error?: string }>;
   };
   app: {
     getVersion: () => Promise<string>;
@@ -218,7 +187,18 @@ export interface ElectronAPI {
     check: () => Promise<void>;
     download: () => Promise<void>;
     install: () => Promise<void>;
-    onStatus: (callback: (status: 'checking' | 'available' | 'not-available' | 'error' | 'progress' | 'downloaded', data?: any) => void) => () => void;
+    onStatus: (
+      callback: (
+        status:
+          | "checking"
+          | "available"
+          | "not-available"
+          | "error"
+          | "progress"
+          | "downloaded",
+        data?: any,
+      ) => void,
+    ) => () => void;
   };
   permissions: {
     /** Check current SSH folder access status. */

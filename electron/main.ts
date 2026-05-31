@@ -2,7 +2,6 @@ import { config } from "dotenv";
 config();
 
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -17,22 +16,20 @@ import type {
 import { sshKeyService } from "./services/sshKeyService.ts";
 import { sshConfigService } from "./services/sshConfigService.ts";
 import { sshConfigParserService } from "./services/sshConfigParserService.ts";
-import { encryptPassphrase } from "./utils/encryption.ts";
 import { getOAuthService, getApiService } from "./services/index.ts";
 import { gitService } from "./services/gitService.ts";
+import * as profileManager from "../core/services/profileManager.ts";
 import { updaterService } from "./services/updaterService.ts";
 import {
   checkSSHPermissions,
   openMacPermissionSettings,
 } from "./utils/permissionCheck.ts";
-import {
-  isSSHAuthSuccess,
-} from "./utils/providerUtils.ts";
+import { isSSHAuthSuccess } from "./utils/providerUtils.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-import { isWindows, isMac, isLinux, system, isDev } from "./utils/environment.ts";
+import { isDev } from "./utils/environment.ts";
 import { sshAgentService } from "./services/sshAgentService.ts";
 
 let mainWindow: BrowserWindow | null = null;
@@ -123,7 +120,7 @@ app.whenReady().then(async () => {
   const permResult = checkSSHPermissions();
   console.log(
     `[DevSwitch] SSH permission check → granted: ${permResult.granted}, ` +
-    `status: ${permResult.status}, platform: ${permResult.platform}`,
+      `status: ${permResult.status}, platform: ${permResult.platform}`,
   );
 
   if (!permResult.granted) {
@@ -153,193 +150,35 @@ ipcMain.handle("log:clearBefore", async (_, timestamp: number) => {
 });
 
 // Profile Management
+// All profile orchestration now lives in the shared core `profileManager`,
+// which is used identically by the desktop app (here) and the `devswitch` CLI.
+// This guarantees both produce the same side effects and write to the same DB.
 ipcMain.handle(
   "profile:create",
   async (_, input: CreateProfileInput): Promise<Profile> => {
-    const profile: Profile = {
-      id: uuidv4(),
-      name: input.name,
-      email: input.email,
-      username: input.username,
-      sshKeyType: input.sshKeyType,
-      keyPath: null,
-      keyAlgorithm: null,
-      hasPassphrase: false,
-      passphraseEncrypted: null,
-      hostConfigured: false,
-      provider: input.provider,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    // Handle SSH key based on type
-    if (input.sshKeyType === "default") {
-      profile.keyPath = sshKeyService.getDefaultKeyPath();
-    } else if (
-      input.sshKeyType === "generated" &&
-      input.keyAlgorithm &&
-      input.keyName
-    ) {
-      const result = await sshKeyService.generateKey({
-        algorithm: input.keyAlgorithm,
-        name: input.keyName,
-        passphrase: input.passphrase,
-        email: input.email,
-      });
-
-      if (result.success && result.keyPath) {
-        profile.keyPath = result.keyPath;
-        profile.keyAlgorithm = input.keyAlgorithm;
-
-        if (input.passphrase) {
-          profile.hasPassphrase = true;
-          profile.passphraseEncrypted = encryptPassphrase(input.passphrase);
-        }
-
-        // Add to ssh-agent
-        await sshAgentService.addKeyToAgent({
-          keyPath: result.keyPath,
-          passphrase: input.passphrase,
-        });
-      } else {
-        throw new Error(result.error || "Failed to generate SSH key");
-      }
-    } else if (input.sshKeyType === "existing" && input.existingKeyPath) {
-      profile.keyPath = input.existingKeyPath;
-    }
-
-    // Update SSH config
-    if (profile.keyPath) {
-      const configResult = await sshConfigService.updateConfig(profile);
-      profile.hostConfigured = configResult.success;
-    }
-
-    // Save profile
-    storageService.saveProfile(profile);
-
-    logService.addLog('PROFILE_CREATED', `Profile "${profile.name}" created`, {
-      profileId: profile.id,
-      provider: profile.provider,
-      sshKeyType: profile.sshKeyType
-    });
-
-    return profile;
+    return profileManager.createProfile(input, "app");
   },
 );
 
 ipcMain.handle(
   "profile:update",
   async (_, input: UpdateProfileInput): Promise<Profile> => {
-    const existingProfile = storageService.getProfile(input.id);
-
-    if (!existingProfile) {
-      throw new Error("Profile not found");
-    }
-
-    const updatedProfile: Profile = {
-      ...existingProfile,
-      name: input.name ?? existingProfile.name,
-      email: input.email ?? existingProfile.email,
-      username: input.username ?? existingProfile.username,
-      avatar: input.avatar ?? existingProfile.avatar,
-      color: input.color ?? existingProfile.color,
-      tags: input.tags ?? existingProfile.tags,
-      provider: input.provider ?? existingProfile.provider,
-      updatedAt: Date.now(),
-    };
-
-    // Handle SSH key updates if provided
-    if (input.sshKeyType) {
-      updatedProfile.sshKeyType = input.sshKeyType;
-
-      if (input.sshKeyType === "default") {
-        updatedProfile.keyPath = sshKeyService.getDefaultKeyPath();
-        updatedProfile.keyAlgorithm = null;
-        updatedProfile.hasPassphrase = false;
-        updatedProfile.passphraseEncrypted = null;
-      } else if (
-        input.sshKeyType === "generated" &&
-        input.keyAlgorithm &&
-        input.keyName
-      ) {
-        const result = await sshKeyService.generateKey({
-          algorithm: input.keyAlgorithm,
-          name: input.keyName,
-          passphrase: input.passphrase,
-          email: updatedProfile.email,
-        });
-
-        if (result.success && result.keyPath) {
-          updatedProfile.keyPath = result.keyPath;
-          updatedProfile.keyAlgorithm = input.keyAlgorithm;
-
-          if (input.passphrase) {
-            updatedProfile.hasPassphrase = true;
-            updatedProfile.passphraseEncrypted = encryptPassphrase(
-              input.passphrase,
-            );
-          }
-
-          await sshAgentService.addKeyToAgent({
-            keyPath: result.keyPath,
-            passphrase: input.passphrase,
-          });
-        }
-      } else if (input.sshKeyType === "existing" && input.existingKeyPath) {
-        updatedProfile.keyPath = input.existingKeyPath;
-        updatedProfile.keyAlgorithm = null;
-        updatedProfile.hasPassphrase = false;
-        updatedProfile.passphraseEncrypted = null;
-      }
-    }
-
-    // Update SSH config
-    if (updatedProfile.keyPath) {
-      const configResult = await sshConfigService.updateConfig(updatedProfile);
-      updatedProfile.hostConfigured = configResult.success;
-    }
-
-    storageService.saveProfile(updatedProfile);
-
-    logService.addLog('PROFILE_UPDATED', `Profile "${updatedProfile.name}" updated`, {
-      profileId: updatedProfile.id,
-      provider: updatedProfile.provider
-    });
-
-    return updatedProfile;
+    return profileManager.updateProfile(input, "app");
   },
 );
 
 ipcMain.handle("profile:delete", async (_, id: string): Promise<boolean> => {
-  const profile = storageService.getProfile(id);
-
-  if (profile) {
-    // Remove from SSH config
-    await sshConfigService.removeProfileConfig(id);
-
-    // Delete SSH key files if it was generated by DevSwitch
-    if (profile.sshKeyType === "generated" && profile.keyPath) {
-      sshKeyService.deleteKey(profile.keyPath);
-    }
-
-    logService.addLog('PROFILE_DELETED', `Profile "${profile.name}" deleted`, {
-      profileId: profile.id,
-      provider: profile.provider
-    });
-  }
-
-  return storageService.deleteProfile(id);
+  return profileManager.deleteProfile(id, "app");
 });
 
 ipcMain.handle("profile:getAll", async (): Promise<Profile[]> => {
-  return storageService.getAllProfiles();
+  return profileManager.getAllProfiles();
 });
 
 ipcMain.handle(
   "profile:getById",
   async (_, id: string): Promise<Profile | null> => {
-    const profile = storageService.getProfile(id);
-    return profile || null;
+    return profileManager.getProfileById(id);
   },
 );
 
@@ -512,110 +351,7 @@ ipcMain.handle("git:getGlobalConfig", async () => {
 
 // Sync Operations
 ipcMain.handle("sync:scanAndSync", async () => {
-  try {
-    // Get all SSH keys
-    const allKeys = await sshKeyService.scanAllSSHKeys();
-
-    // Get all host mappings from SSH config
-    const hostMappings = sshConfigService.getAllHostKeyMappings();
-
-    // Get existing profiles
-    const existingProfiles = storageService.getAllProfiles();
-
-    // Track created profiles
-    const syncedProfiles: Profile[] = [];
-    const skippedKeys: string[] = [];
-
-    for (const keyInfo of allKeys) {
-      // Check if profile already exists for this key
-      const existingProfile = existingProfiles.find(
-        (p) => p.keyPath === keyInfo.privatePath,
-      );
-
-      if (existingProfile) {
-        skippedKeys.push(keyInfo.privatePath);
-        continue;
-      }
-
-      // Find matching host mapping for this key
-      const hostMapping = hostMappings.find(
-        (m) =>
-          path.normalize(m.identityFile) ===
-          path.normalize(keyInfo.privatePath),
-      );
-
-      // Determine username
-      let username = hostMapping?.username || null;
-
-      // If no username from host, try to extract from email
-      if (!username && keyInfo.email) {
-        username = keyInfo.email.split("@")[0];
-      }
-
-      // If still no username, use key filename
-      if (!username) {
-        username = path.basename(keyInfo.privatePath);
-      }
-
-      // Determine email
-      const email = keyInfo.email || `${username}@local`;
-
-      // Generate profile name
-      const profileName = `${username} (Synced)`;
-
-      // Assign default customization options (color and avatar) for synced profiles
-      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-      const emojis = ['👤', '💻', '🚀', '🔑', '💼', '🎯', '🌟', '💡'];
-      const color = colors[syncedProfiles.length % colors.length];
-      const avatar = emojis[syncedProfiles.length % emojis.length];
-
-      // Create profile
-      const profile: Profile = {
-        id: uuidv4(),
-        name: profileName,
-        email: email,
-        username: username,
-        sshKeyType: "existing",
-        keyPath: keyInfo.privatePath,
-        keyAlgorithm:
-          keyInfo.algorithm === "rsa" || keyInfo.algorithm === "ed25519"
-            ? keyInfo.algorithm
-            : null,
-        hasPassphrase: false,
-        passphraseEncrypted: null,
-        hostConfigured: hostMapping ? true : false,
-        avatar: avatar,
-        color: color,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-
-      // Update SSH config if no host mapping exists
-      if (!hostMapping) {
-        await sshConfigService.updateConfig(profile);
-        profile.hostConfigured = true;
-      }
-
-      // Save profile
-      storageService.saveProfile(profile);
-      syncedProfiles.push(profile);
-    }
-
-    return {
-      success: true,
-      syncedCount: syncedProfiles.length,
-      skippedCount: skippedKeys.length,
-      profiles: syncedProfiles,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      syncedCount: 0,
-      skippedCount: 0,
-      profiles: [],
-      error: error instanceof Error ? error.message : "Failed to sync profiles",
-    };
-  }
+  return profileManager.scanAndSync("app");
 });
 
 // Window Control Handlers
@@ -673,20 +409,32 @@ for (const provider of OAUTH_PROVIDERS) {
   ipcMain.handle(
     `${provider}:disconnectAccount`,
     async (_, profileId: string) => {
-      const result = await getOAuthService(provider as OAuthProviderName).disconnectAccount(profileId);
+      const result = await getOAuthService(
+        provider as OAuthProviderName,
+      ).disconnectAccount(profileId);
       if (result.success) {
         const profile = storageService.getProfile(profileId);
-        logService.addLog('PROVIDER_DISCONNECTED', `Disconnected ${provider} account from profile "${profile?.name || profileId}"`, { profileId, provider });
+        logService.addLog(
+          "PROVIDER_DISCONNECTED",
+          `Disconnected ${provider} account from profile "${profile?.name || profileId}"`,
+          { profileId, provider },
+        );
       }
       return result;
-    }
+    },
   );
 
   ipcMain.handle(`${provider}:uploadSSHKey`, async (_, profileId: string) => {
-    const result = await getApiService(provider as OAuthProviderName).uploadSSHKey(profileId);
+    const result = await getApiService(
+      provider as OAuthProviderName,
+    ).uploadSSHKey(profileId);
     if (result.success) {
       const profile = storageService.getProfile(profileId);
-      logService.addLog('PROVIDER_KEY_UPLOADED', `Uploaded SSH key to ${provider} for profile "${profile?.name || profileId}"`, { profileId, provider, keyTitle: result.keyTitle });
+      logService.addLog(
+        "PROVIDER_KEY_UPLOADED",
+        `Uploaded SSH key to ${provider} for profile "${profile?.name || profileId}"`,
+        { profileId, provider, keyTitle: result.keyTitle },
+      );
     }
     return result;
   });

@@ -1,19 +1,8 @@
-export type LogActionType =
-  | 'APP_UPDATE'
-  | 'APP_UPDATE_ERROR'
-  | 'PROFILE_CREATED'
-  | 'PROFILE_UPDATED'
-  | 'PROFILE_DELETED'
-  | 'SSH_KEY_GENERATED'
-  | 'SSH_KEY_IMPORTED'
-  | 'SSH_CONFIG_UPDATED'
-  | 'PROVIDER_KEY_UPLOADED'
-  | 'PROVIDER_DISCONNECTED';
-
-export interface ActivityLog {
-  id: string;
-  timestamp: number;
-  action: LogActionType;
-  message: string; // User friendly message
-  details?: Record<string, any>; // Extra details like provider, profile name, etc.
-}
+/**
+ * Re-export of shared core log types.
+ */
+export type {
+  LogActionType,
+  LogSource,
+  ActivityLog,
+} from "../../core/type/log.ts";
