@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "tsc && electron electron/main.ts --no-sandbox",
-    "electron:build": "tsc && electron-builder"
+    "electron:build": "tsc && npm run cli:build && electron-builder",
+    "cli:build": "npm --prefix cli run build",
+    "cli:link": "npm run cli:build && npm link ./cli"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.17",
@@ -94,8 +96,19 @@
       ]
     },
     "files": [
-      "electron/**/*"
+      "electron/**/*",
+      "core/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "cli/bin/devswitch.cjs",
+        "to": "cli/devswitch.cjs"
+      }
+    ],
+    "deb": {
+      "afterInstall": "build/linux/after-install.sh",
+      "afterRemove": "build/linux/after-remove.sh"
+    },
     "publish": [
       {
         "provider": "generic",
