@@ -4,7 +4,7 @@
   "description": "Standalone command-line tool for DevSwitch — manage multiple Git profiles and SSH keys. Shares its database with the DevSwitch desktop app.",
   "type": "module",
   "bin": {
-    "devswitch": "./bin/devswitch.cjs"
+    "devswitch": "bin/devswitch.cjs"
   },
   "files": [
     "bin/",
