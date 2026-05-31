@@ -18,11 +18,6 @@ on:
   push:
     branches:
       - cli-release
-    paths:
-      # Only react to changes that can affect the published package.
-      - "cli/**"
-      - "core/**"
-      - ".github/workflows/publish-cli.yml"
   workflow_dispatch: {} # allow manual runs from the Actions tab
 
 # Avoid two publishes racing if pushes land close together.
