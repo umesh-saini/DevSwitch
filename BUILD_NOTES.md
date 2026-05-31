@@ -142,7 +142,7 @@ npm run cli:build
 
 2. **npm publish** — automatic via GitHub Actions (see section 6 below). You
    normally never run `npm publish` by hand; you just bump the version and push
-   to the `release` branch.
+   to the `cli-release` branch.
 
 3. **Hand someone the file** — they run `node devswitch.cjs help` directly, or
    put it on their PATH themselves. (The `curl … /init/cli.sh` script does this
@@ -200,8 +200,9 @@ You don't run `npm publish` yourself.
 ### How it works
 
 - Workflow: `.github/workflows/publish-cli.yml`
-- Trigger: a push to the **`release`** branch (this is the stable CLI branch —
-  separate from the app's `release/v*` branches).
+- Trigger: a push to the **`cli-release`** branch (this is the stable CLI branch —
+  named `cli-release`, not `release`, because the app owns the `release/v*`
+  namespace and git can't have both `release` and `release/v*`).
 - It reads the version from `cli/package.json` and **only publishes if that
   exact version is not already on npm.** So merging contributor fixes that don't
   bump the version is safe — it just skips publishing.
@@ -231,10 +232,10 @@ cd cli
 npm version patch        # or: minor / major   → updates cli/package.json
 cd ..
 
-# 2. Get it onto the `release` branch.
-#    Contributors open PRs against `release`; you review and merge.
-#    For your own release, merge develop/main -> release, or push there.
-git push origin release
+# 2. Get it onto the `cli-release` branch.
+#    Contributors open PRs against `cli-release`; you review and merge.
+#    For your own release, merge develop/main -> cli-release, or push there.
+git push origin cli-release
 
 # 3. GitHub Actions builds and publishes devswitch-cli@<new-version> to npm.
 #    Watch progress in the repo's Actions tab.
