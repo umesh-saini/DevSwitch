@@ -1,0 +1,91 @@
+name: Publish CLI to npm
+
+# Publishes the `devswitch` CLI to npm automatically.
+#
+# Trigger: any push to the `release` branch (the stable CLI branch).
+# Open-source contributors send PRs; when you merge a PR into `release`, this
+# workflow runs. It only publishes when cli/package.json has a NEW version that
+# is not already on npm — so merging fixes that don't bump the version is safe
+# and will simply skip publishing.
+#
+# Required repo secret:
+#   NPM_TOKEN  — an npm "Automation" access token with publish rights to the
+#                package (and to your org/scope if the package is scoped).
+
+on:
+  push:
+    branches:
+      - release
+    paths:
+      # Only react to changes that can affect the published package.
+      - "cli/**"
+      - "core/**"
+      - ".github/workflows/publish-cli.yml"
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+# Avoid two publishes racing if pushes land close together.
+concurrency:
+  group: publish-cli
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build & publish devswitch CLI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Read package name & version
+        id: pkg
+        run: |
+          NAME=$(node -p "require('./cli/package.json').name")
+          VERSION=$(node -p "require('./cli/package.json').version")
+          echo "name=$NAME"       >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Package: $NAME@$VERSION"
+
+      - name: Check if this version is already published
+        id: check
+        run: |
+          set -e
+          NAME='${{ steps.pkg.outputs.name }}'
+          VERSION='${{ steps.pkg.outputs.version }}'
+          # `npm view <name>@<version> version` prints the version if it exists,
+          # or nothing (and exits non-zero) if that exact version is unpublished.
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$NAME@$VERSION is already on npm — skipping publish."
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$NAME@$VERSION is new — will publish."
+          fi
+
+      - name: Install root dependencies
+        if: steps.check.outputs.already_published == 'false'
+        run: npm ci
+
+      - name: Install CLI dependencies
+        if: steps.check.outputs.already_published == 'false'
+        run: npm --prefix cli ci || npm --prefix cli install
+
+      - name: Build CLI bundle
+        if: steps.check.outputs.already_published == 'false'
+        run: npm run cli:build
+
+      - name: Publish to npm
+        if: steps.check.outputs.already_published == 'false'
+        working-directory: cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
+
+      - name: Summary
+        if: steps.check.outputs.already_published == 'false'
+        run: echo "Published ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }} to npm."
