@@ -93,7 +93,7 @@ export function ProfileCard({ profile, onEdit, onDelete, layoutView = 'grid' }: 
         <div className="flex-1 min-w-0">
           {/* First row: Name, Badge, Status */}
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h3 className="text-base font-extrabold text-foreground group-hover:text-primary transition-colors truncate">
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
               {profile.name}
             </h3>
             <span
@@ -124,17 +124,17 @@ export function ProfileCard({ profile, onEdit, onDelete, layoutView = 'grid' }: 
           <div className="flex items-center gap-6 mt-2 text-xs text-muted-foreground flex-wrap">
             <div className="flex items-center gap-1.5 min-w-0">
               <User className="w-3.5 h-3.5 flex-shrink-0 opacity-70 text-foreground" />
-              <span className="truncate font-medium text-foreground/80">{profile.username}</span>
+              <span className="truncate font-medium text-foreground/85">{profile.username}</span>
             </div>
             <div className="flex items-center gap-1.5 min-w-0">
               <Mail className="w-3.5 h-3.5 flex-shrink-0 opacity-70 text-foreground" />
-              <span className="truncate font-medium text-foreground/80">{profile.email}</span>
+              <span className="truncate font-medium text-foreground/85">{profile.email}</span>
             </div>
             <div className="flex items-center gap-1.5 min-w-0">
-              <Key className="w-3.5 h-3.5 flex-shrink-0 text-primary opacity-80" />
-              <span className="font-semibold text-foreground/85">{getKeyTypeLabel()}</span>
+              <Key className="w-3.5 h-3.5 flex-shrink-0 text-primary opacity-85" />
+              <span className="font-semibold text-foreground/90">{getKeyTypeLabel()}</span>
               {profile.keyPath && (
-                <span className="font-mono text-muted-foreground/75 truncate max-w-[200px]" title={profile.keyPath}>
+                <span className="font-mono text-muted-foreground/80 truncate max-w-[200px]" title={profile.keyPath}>
                   ({profile.keyPath.split('/').pop()})
                 </span>
               )}
@@ -172,13 +172,12 @@ export function ProfileCard({ profile, onEdit, onDelete, layoutView = 'grid' }: 
     );
   }
 
-  // Grid view (default)
+  // Grid view (default) - Refactored for extreme compactness and premium SaaS layouts
   return (
     <Card 
-      className="hover:shadow-xl transition-all duration-300 cursor-pointer group border border-border/60 hover:border-border rounded-2xl bg-card hover:bg-accent/[0.02] relative overflow-hidden flex flex-col h-full"
+      className="hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group border border-border/50 hover:border-primary/20 rounded-xl bg-card hover:bg-accent/[0.01] relative overflow-hidden flex flex-col h-full"
       style={{ 
-        borderTop: `4px solid ${accentColor}`,
-        boxShadow: `0 4px 30px -10px ${accentColor}10`
+        borderTop: `3px solid ${accentColor}`,
       }}
       onClick={() => navigate(`/view/${profile.id}`)}
     >
@@ -186,93 +185,89 @@ export function ProfileCard({ profile, onEdit, onDelete, layoutView = 'grid' }: 
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
-          background: `radial-gradient(circle 180px at 50% 0px, ${accentColor}06, transparent)`
+          background: `radial-gradient(circle 120px at 50% 0px, ${accentColor}05, transparent)`
         }}
       />
 
-      <CardHeader className="pb-3 pt-5 px-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3.5 flex-1 min-w-0">
-            {profile.avatar && (
-              <div 
-                className="flex items-center justify-center w-12 h-12 rounded-xl text-2xl flex-shrink-0 transition-all duration-300 group-hover:scale-110 shadow-sm"
+      <CardHeader className="pb-2.5 pt-3.5 px-4">
+        <div className="flex items-center gap-3">
+          {profile.avatar && (
+            <div 
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-lg flex-shrink-0 transition-all duration-350 group-hover:scale-105 shadow-xs"
+              style={{ 
+                background: `${accentColor}10`, 
+                color: accentColor,
+                border: `1px solid ${accentColor}20`,
+              }}
+            >
+              {profile.avatar}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0 leading-none">
+              <span
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-wider border flex-shrink-0"
                 style={{ 
-                  background: `linear-gradient(135deg, ${accentColor}15, ${accentColor}30)`, 
-                  color: accentColor,
-                  border: `1.5px solid ${accentColor}25`,
-                  boxShadow: `0 8px 20px -8px ${accentColor}40`
+                  backgroundColor: `${providerCfg.color}15`, 
+                  color: providerCfg.color,
+                  borderColor: `${providerCfg.color}35`
                 }}
               >
-                {profile.avatar}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                <span
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border flex-shrink-0"
-                  style={{ 
-                    backgroundColor: `${providerCfg.color}15`, 
-                    color: providerCfg.color,
-                    borderColor: `${providerCfg.color}35`
-                  }}
-                >
-                  {providerCfg.name}
+                {providerCfg.name}
+              </span>
+
+              {profile.hostConfigured ? (
+                <span className="inline-flex items-center gap-1 text-[8px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">
+                  <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                  Ready
                 </span>
-
-                {/* Status Dot */}
-                {profile.hostConfigured ? (
-                  <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                    Ready
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Pending Config
-                  </span>
-                )}
-              </div>
-
-              <CardTitle className="text-base font-extrabold truncate mt-1 text-foreground group-hover:text-primary transition-colors tracking-tight">
-                {profile.name}
-              </CardTitle>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[8px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full">
+                  <span className="w-1 h-1 rounded-full bg-amber-500" />
+                  Pending
+                </span>
+              )}
             </div>
+
+            <CardTitle className="text-sm font-bold truncate mt-1.5 text-foreground group-hover:text-primary transition-colors tracking-tight">
+              {profile.name}
+            </CardTitle>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4 pb-5 px-5 flex-1">
-        {/* User Info Fields */}
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2.5 text-xs text-muted-foreground bg-muted/20 dark:bg-muted/5 p-2 rounded-lg border border-border/30">
-            <User className="w-4 h-4 flex-shrink-0 opacity-70 text-foreground" />
-            <span className="truncate font-medium text-foreground/80">{profile.username}</span>
+      <CardContent className="space-y-3 pb-3 px-4 flex-1">
+        {/* User Info Fields - Borderless Compact metadata rows */}
+        <div className="space-y-2 border-t border-border/20 pt-2.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground font-medium">User:</span>
+            <span className="font-mono text-foreground/85 font-medium truncate max-w-[140px]">{profile.username}</span>
           </div>
           
-          <div className="flex items-center gap-2.5 text-xs text-muted-foreground bg-muted/20 dark:bg-muted/5 p-2 rounded-lg border border-border/30">
-            <Mail className="w-4 h-4 flex-shrink-0 opacity-70 text-foreground" />
-            <span className="truncate font-medium text-foreground/80">{profile.email}</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground font-medium">Email:</span>
+            <span className="font-mono text-foreground/85 font-medium truncate max-w-[140px]" title={profile.email}>{profile.email}</span>
           </div>
         </div>
         
-        {/* SSH Key Box */}
-        <div className="p-3 rounded-xl bg-muted/30 dark:bg-muted/10 border border-border/50 space-y-1.5 hover:bg-muted/50 dark:hover:bg-muted/15 transition-all duration-200">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">SSH Key</span>
-            <span className="font-semibold text-foreground bg-primary/10 text-primary px-2 py-0.5 rounded-md text-[9px]">
+        {/* SSH Key Box - Smaller and flatter */}
+        <div className="p-2 rounded-lg bg-muted/30 dark:bg-muted/10 border border-border/40 space-y-1 hover:bg-muted/50 dark:hover:bg-muted/15 transition-all duration-200">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted-foreground font-semibold text-[10px]">SSH Config</span>
+            <span className="font-bold text-foreground bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[8px]">
               {getKeyTypeLabel()}
             </span>
           </div>
           {profile.keyPath && (
-            <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground mt-1.5 truncate" title={profile.keyPath}>
-              <Key className="w-3.5 h-3.5 text-primary flex-shrink-0 opacity-80" />
+            <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground truncate" title={profile.keyPath}>
+              <Key className="w-3 h-3 text-primary flex-shrink-0 opacity-80" />
               <span className="truncate text-foreground/80">{profile.keyPath.split('/').pop()}</span>
             </div>
           )}
         </div>
       </CardContent>
       
-      <CardFooter className="gap-2 justify-end border-t border-border/40 pt-3.5 pb-3.5 px-5 bg-muted/[0.05] mt-auto">
+      <CardFooter className="gap-2 justify-end border-t border-border/20 py-2 px-4 bg-muted/[0.02] mt-auto">
         <Button
           variant="ghost"
           size="sm"
@@ -280,9 +275,9 @@ export function ProfileCard({ profile, onEdit, onDelete, layoutView = 'grid' }: 
             e.stopPropagation();
             onEdit(profile);
           }}
-          className="h-8 hover:bg-background border border-transparent hover:border-border transition-all duration-200"
+          className="h-7 text-xs hover:bg-background border border-transparent hover:border-border transition-all duration-150 rounded-md font-bold px-2.5"
         >
-          <Edit className="w-3.5 h-3.5 mr-1.5" />
+          <Edit className="w-3 h-3 mr-1" />
           Edit
         </Button>
         <Button
@@ -292,9 +287,9 @@ export function ProfileCard({ profile, onEdit, onDelete, layoutView = 'grid' }: 
             e.stopPropagation();
             onDelete(profile);
           }}
-          className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-200"
+          className="h-7 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive border border-transparent hover:border-destructive/20 transition-all duration-150 rounded-md font-bold px-2.5"
         >
-          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+          <Trash2 className="w-3 h-3 mr-1" />
           Delete
         </Button>
       </CardFooter>

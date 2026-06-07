@@ -27,7 +27,9 @@ import {
   Terminal,
   GitBranch,
   GitFork,
-  RefreshCcw
+  RefreshCcw,
+  Globe,
+  Lock
 } from 'lucide-react';
 
 export function ProfileViewPage() {
@@ -141,12 +143,12 @@ export function ProfileViewPage() {
       variant="outline"
       size="sm"
       onClick={() => copyToClipboard(text, field)}
-      className="flex-shrink-0"
+      className="flex-shrink-0 h-8 w-8 p-0 border-border/40 hover:bg-background/80 active:scale-90 transition-transform duration-150"
     >
       {copiedField === field ? (
-        <Check className="w-4 h-4 text-green-600" />
+        <Check className="w-3.5 h-3.5 text-green-500 animate-scale-in" />
       ) : (
-        <Copy className="w-4 h-4" />
+        <Copy className="w-3.5 h-3.5 opacity-70" />
       )}
     </Button>
   );
@@ -154,8 +156,9 @@ export function ProfileViewPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="w-9 h-9 animate-spin text-primary" />
+          <p className="text-xs font-semibold text-muted-foreground animate-pulse">Retrieving security profile...</p>
         </div>
       </AppShell>
     );
@@ -164,9 +167,9 @@ export function ProfileViewPage() {
   if (!profile) {
     return (
       <AppShell>
-        <div className="max-w-3xl mx-auto text-center py-16">
-          <h2 className="text-2xl font-bold mb-2">Profile Not Found</h2>
-          <p className="text-muted-foreground mb-4">
+        <div className="max-w-3xl mx-auto text-center py-20 space-y-4">
+          <h2 className="text-2xl font-bold">Profile Not Found</h2>
+          <p className="text-muted-foreground text-sm">
             The profile you're looking for doesn't exist.
           </p>
           <Button onClick={() => navigate('/')}>
@@ -178,60 +181,59 @@ export function ProfileViewPage() {
   }
 
   const providerCfg = getProviderConfig((profile.provider as GitProvider) || 'github');
-  // isGitHub kept for any future GitHub-specific UI if needed
-  const _isGitHub = providerCfg.id === 'github'; void _isGitHub;
   const profileUrl = providerCfg.buildProfileUrl(profile.username);
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="max-w-5xl mx-auto space-y-6 animate-scale-in">
+        {/* Navigation Action Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/40">
+          <div className="space-y-1">
             <Button
               variant="ghost"
               onClick={() => navigate('/')}
-              className="mb-4"
+              className="h-8 text-xs text-muted-foreground hover:text-foreground pl-0 group"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Profiles
+              <ArrowLeft className="w-3.5 h-3.5 mr-1.5 group-hover:-translate-x-0.5 transition-transform" />
+              Back to dashboard
             </Button>
-            <h2 className="text-3xl font-bold mb-2">{profile.name}</h2>
-            <div className="flex items-center gap-3">
-              {/* Provider badge */}
+            
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-2xl font-extrabold tracking-tight">{profile.name}</h2>
               <span
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-white"
                 style={{ backgroundColor: providerCfg.color }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
                 {providerCfg.name}
               </span>
 
               {profile.hostConfigured ? (
-                <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>SSH Configured</span>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  SSH Active
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>Not Configured</span>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Not Configured
                 </div>
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               onClick={() => navigate(`/${profile.id}`)}
+              className="h-9 hover:bg-background/80"
             >
               <Edit className="w-4 h-4 mr-2" />
-              Edit
+              Edit Profile
             </Button>
             <Button
               variant="outline"
               onClick={() => setDeleteDialogOpen(true)}
-              className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+              className="h-9 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
@@ -239,243 +241,244 @@ export function ProfileViewPage() {
           </div>
         </div>
 
-        {/* Git Project Actions */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Git Project Actions</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Clone a new repository or update an existing project with this profile's configuration
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => setCloneDialogOpen(true)} variant="default">
-              <GitFork className="w-4 h-4 mr-2" />
-              Clone Project
-            </Button>
-            <Button onClick={() => setUpdateDialogOpen(true)} variant="outline">
-              <RefreshCcw className="w-4 h-4 mr-2" />
-              Update Project Config
-            </Button>
-          </div>
-        </div>
-
-        {/* Profile Details */}
-        <div className="bg-card border border-border rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-semibold mb-4">Profile Details</h3>
+        {/* Double Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">{providerCfg.name} Username</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="text-sm font-mono bg-muted px-2 py-1 rounded flex-1 truncate">
-                    {profile.username}
-                  </code>
-                  <CopyButton text={profile.username} field="username" />
+          {/* Left Column: Details & Connections (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Profile Info Card */}
+            <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-5 space-y-5 shadow-soft">
+              <div className="flex items-center gap-2">
+                <span className="w-1 h-3 rounded-full bg-primary" />
+                <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase">Identity Details</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-muted rounded-lg shrink-0 mt-0.5">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Username</div>
+                    <div className="font-semibold text-sm truncate mt-0.5">{profile.username}</div>
+                    {profileUrl && (
+                      <a
+                        href={profileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline mt-1 inline-flex items-center gap-1 font-semibold"
+                      >
+                        <Globe className="w-3 h-3" />
+                        View Account Profile
+                      </a>
+                    )}
+                  </div>
                 </div>
-                {profileUrl && (
-                  <a
-                    href={profileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline mt-1 inline-block"
-                  >
-                    View {providerCfg.name} Profile →
-                  </a>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-muted rounded-lg shrink-0 mt-0.5">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Email Address</div>
+                    <div className="font-semibold text-sm truncate mt-0.5">{profile.email}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-muted rounded-lg shrink-0 mt-0.5">
+                    <Key className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">SSH Credential Type</div>
+                    <div className="font-semibold text-sm mt-0.5">
+                      {profile.sshKeyType === 'default' && 'Default Key'}
+                      {profile.sshKeyType === 'generated' && (profile.keyAlgorithm === 'ed25519' ? 'ED25519 Elliptic' : 'RSA 4096 Secure')}
+                      {profile.sshKeyType === 'existing' && 'Custom Imported Key'}
+                    </div>
+                    {profile.keyPath && (
+                      <div className="text-[11px] text-muted-foreground mt-1 break-all bg-muted/30 p-1.5 rounded font-mono">
+                        {profile.keyPath}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {hostAlias && (
+                  <div className="flex items-start gap-3 border-t border-border/30 pt-3">
+                    <div className="p-2 bg-primary/10 text-primary rounded-lg shrink-0 mt-0.5">
+                      <Terminal className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">SSH Host Alias</div>
+                      <code className="text-xs font-mono font-bold text-primary mt-1 block">
+                        {hostAlias}
+                      </code>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">Email</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="text-sm font-mono bg-muted px-2 py-1 rounded flex-1 truncate">
-                    {profile.email}
-                  </code>
-                  <CopyButton text={profile.email} field="email" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Key className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-1" />
-              <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">SSH Key Type</Label>
-                <div className="mt-1">
-                  <span className="text-sm font-medium">
-                    {profile.sshKeyType === 'default' && 'Default Key'}
-                    {profile.sshKeyType === 'generated' && (profile.keyAlgorithm === 'ed25519' ? 'ED25519' : 'RSA 4096')}
-                    {profile.sshKeyType === 'existing' && 'Custom Key'}
-                  </span>
-                  {profile.keyPath && (
-                    <div className="text-xs text-muted-foreground mt-1 break-all">
-                      {profile.keyPath}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* SSH host alias info */}
-            {hostAlias && (
-              <div className="flex items-start gap-3">
-                <span className="w-5 h-5 flex items-center justify-center text-muted-foreground flex-shrink-0 mt-0.5 text-xs font-bold">
-                  @
-                </span>
-                <div className="flex-1 min-w-0">
-                  <Label className="text-xs text-muted-foreground">SSH Host</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm font-mono bg-muted px-2 py-1 rounded flex-1 truncate">
-                      {hostAlias}
-                    </code>
-                    <CopyButton text={hostAlias} field="hostAlias" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Canonical host: <span className="font-mono">{providerCfg.sshHost}</span>
-                  </p>
-                </div>
+            {/* Provider Connections Box */}
+            {profile.provider !== 'other' && (
+              <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-1 shadow-soft">
+                <GitHubConnection
+                  profileId={profile.id}
+                  provider={profile.provider || 'github'}
+                  isConnected={profile.providerMeta?.connected ?? profile.githubConnected ?? false}
+                  providerUsername={profile.providerMeta?.username ?? profile.githubUsername}
+                  sshKeyAdded={profile.providerMeta?.sshKeyAdded ?? profile.sshKeyAddedToGithub ?? false}
+                  onStatusChange={handleGitHubStatusChange}
+                />
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Provider Integration — shown for all providers except 'other' */}
-        {profile.provider !== 'other' && (
-          <GitHubConnection
-            profileId={profile.id}
-            provider={profile.provider || 'github'}
-            isConnected={profile.providerMeta?.connected ?? profile.githubConnected ?? false}
-            providerUsername={profile.providerMeta?.username ?? profile.githubUsername}
-            sshKeyAdded={profile.providerMeta?.sshKeyAdded ?? profile.sshKeyAddedToGithub ?? false}
-            onStatusChange={handleGitHubStatusChange}
-          />
-        )}
-
-        {/* SSH Connection Tester */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <SSHConnectionTester
-            username={profile.username}
-            provider={providerCfg.id}
-            hostAlias={hostAlias || providerCfg.sshHost}
-          />
-        </div>
-
-        {/* SSH Public Key */}
-        {sshPublicKey && (
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">SSH Public Key</h3>
-              <CopyButton text={sshPublicKey} field="sshKey" />
+            {/* SSH Testing panel */}
+            <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-5 shadow-soft">
+              <SSHConnectionTester
+                username={profile.username}
+                provider={providerCfg.id}
+                hostAlias={hostAlias || providerCfg.sshHost}
+              />
             </div>
-            <div className="bg-muted p-3 rounded font-mono text-xs break-all">
-              {sshPublicKey}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Copy this key and add it to your {providerCfg.name} account SSH settings
-            </p>
           </div>
-        )}
 
-        {/* Git Config Commands */}
-        <div className="bg-card border border-border rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Terminal className="w-5 h-5" />
-            Git Config Commands
-          </h3>
-          
-          <p className="text-sm text-muted-foreground">
-            Use these commands to configure Git for this profile in your repository
-          </p>
-
-          <div className="space-y-2">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Set Git Username</Label>
+          {/* Right Column: Git Project Controls & Terminals (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            
+            {/* Git project setup panel */}
+            <div className="bg-gradient-to-r from-primary/10 to-indigo-500/5 border border-primary/20 rounded-2xl p-6 space-y-4 shadow-soft">
               <div className="flex items-center gap-2">
-                <code className="text-xs font-mono bg-muted px-3 py-2 rounded flex-1 break-all border border-border">
-                  git config user.name "{profile.username}"
-                </code>
-                <CopyButton text={`git config user.name "${profile.username}"`} field="configName" />
+                <GitBranch className="w-5 h-5 text-primary" />
+                <h3 className="text-base font-extrabold">Git Project Integrations</h3>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Connect the current repository or a new workstation to this active profile seamlessly. You can clone directly or update config properties.
+              </p>
+              <div className="flex items-center gap-2.5 flex-wrap pt-1">
+                <Button onClick={() => setCloneDialogOpen(true)} variant="default" className="bg-primary hover:bg-primary/95 shadow-md shadow-primary/15">
+                  <GitFork className="w-4 h-4 mr-2" />
+                  Clone Repository
+                </Button>
+                <Button onClick={() => setUpdateDialogOpen(true)} variant="outline">
+                  <RefreshCcw className="w-4 h-4 mr-2" />
+                  Update Project Config
+                </Button>
               </div>
             </div>
 
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Set Git Email</Label>
-              <div className="flex items-center gap-2">
-                <code className="text-xs font-mono bg-muted px-3 py-2 rounded flex-1 break-all border border-border">
-                  git config user.email "{profile.email}"
-                </code>
-                <CopyButton text={`git config user.email "${profile.email}"`} field="configEmail" />
+            {/* Glowing SSH Public Key box */}
+            {sshPublicKey && (
+              <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-6 space-y-4 shadow-soft">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase">SSH Public Key</h3>
+                  </div>
+                  <CopyButton text={sshPublicKey} field="sshKey" />
+                </div>
+                <div className="bg-neutral-950 dark:bg-black p-4 rounded-xl border border-neutral-800 text-neutral-200 dark:text-neutral-300 font-mono text-xs break-all leading-relaxed shadow-inner max-h-[140px] overflow-y-auto custom-scrollbar select-all">
+                  {sshPublicKey}
+                </div>
+                <p className="text-[11px] text-muted-foreground bg-muted/40 p-2.5 rounded-lg border border-border/30">
+                  ⚠️ Note: Add this key inside your {providerCfg.name} account SSH dashboard to validate authentication requests.
+                </p>
+              </div>
+            )}
+
+            {/* High-Fidelity Terminal Console Mockups */}
+            <div className="bg-neutral-950 rounded-2xl border border-neutral-800 p-6 space-y-5 shadow-xl select-text">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-rose-500/80" />
+                    <span className="w-3 h-3 rounded-full bg-amber-500/80" />
+                    <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <span className="text-[11px] font-bold font-mono text-neutral-500">git_config_helper.sh</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">BASH</span>
+              </div>
+
+              <div className="space-y-4 font-mono text-xs leading-relaxed text-neutral-300">
+                <div className="space-y-1">
+                  <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Set user name globally/locally:</div>
+                  <div className="flex items-center justify-between gap-3 bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-800/80">
+                    <code className="text-emerald-400 select-all font-mono truncate">git config user.name "{profile.username}"</code>
+                    <CopyButton text={`git config user.name "${profile.username}"`} field="cmdUser" />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Set user email address:</div>
+                  <div className="flex items-center justify-between gap-3 bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-800/80">
+                    <code className="text-emerald-400 select-all font-mono truncate">git config user.email "{profile.email}"</code>
+                    <CopyButton text={`git config user.email "${profile.email}"`} field="cmdEmail" />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Verify active configurations:</div>
+                  <div className="flex items-center justify-between gap-3 bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-800/80">
+                    <code className="text-emerald-400 select-all font-mono truncate">git config --local --list</code>
+                    <CopyButton text="git config --local --list" field="cmdList" />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">View Current Config</Label>
+            {/* Repository specific dynamically populated helpers */}
+            <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-6 space-y-4 shadow-soft">
               <div className="flex items-center gap-2">
-                <code className="text-xs font-mono bg-muted px-3 py-2 rounded flex-1 break-all border border-border">
-                  git config --local --list
-                </code>
-                <CopyButton text="git config --local --list" field="configList" />
+                <Terminal className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase">Repository Dynamic Commands</h3>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Repository-Specific Git Commands */}
-        <div className="bg-card border border-border rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <GitBranch className="w-5 h-5" />
-            Repository Commands
-          </h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="gitUrl">Repository URL (SSH or HTTPS)</Label>
-            <Input
-              id="gitUrl"
-              placeholder={`git@${providerCfg.sshHost}:username/repo.git or https://${providerCfg.sshHost}/username/repo.git`}
-              value={gitUrl}
-              onChange={(e) => setGitUrl(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter a repository URL to generate clone, remote, and SSH test commands
-            </p>
-          </div>
-
-          {gitCommands && (
-            <div className="space-y-3 pt-4 border-t">
+              
               <div className="space-y-2">
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Clone Repository</Label>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs font-mono bg-muted px-3 py-2 rounded flex-1 break-all border border-border">
-                      git clone {gitCommands.clone}
-                    </code>
-                    <CopyButton text={`git clone ${gitCommands.clone}`} field="clone" />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Set Remote URL</Label>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs font-mono bg-muted px-3 py-2 rounded flex-1 break-all border border-border">
-                      {gitCommands.remoteSetUrl}
-                    </code>
-                    <CopyButton text={gitCommands.remoteSetUrl} field="remoteSetUrl" />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Test SSH Connection</Label>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs font-mono bg-muted px-3 py-2 rounded flex-1 break-all border border-border">
-                      {gitCommands.sshTest}
-                    </code>
-                    <CopyButton text={gitCommands.sshTest} field="sshTest" />
-                  </div>
-                </div>
+                <Label htmlFor="gitUrl" className="text-xs">Repository URL (SSH or HTTPS)</Label>
+                <Input
+                  id="gitUrl"
+                  placeholder={`e.g., git@${providerCfg.sshHost}:username/repo.git`}
+                  value={gitUrl}
+                  onChange={(e) => setGitUrl(e.target.value)}
+                  className="h-10 text-sm bg-background/50 border-border/80 focus:border-primary/80"
+                />
               </div>
+
+              {gitCommands && (
+                <div className="space-y-3 pt-3 border-t border-border/30 animate-scale-in">
+                  <div className="space-y-3 font-mono text-xs">
+                    <div className="space-y-1">
+                      <div className="text-[10px] text-muted-foreground font-bold uppercase">Clone target repo:</div>
+                      <div className="flex items-center justify-between bg-muted/40 p-2 rounded-lg border border-border/40 gap-3">
+                        <code className="text-primary truncate select-all">git clone {gitCommands.clone}</code>
+                        <CopyButton text={`git clone ${gitCommands.clone}`} field="clone" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[10px] text-muted-foreground font-bold uppercase">Update remote origin:</div>
+                      <div className="flex items-center justify-between bg-muted/40 p-2 rounded-lg border border-border/40 gap-3">
+                        <code className="text-primary truncate select-all">{gitCommands.remoteSetUrl}</code>
+                        <CopyButton text={gitCommands.remoteSetUrl} field="remoteSetUrl" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-[10px] text-muted-foreground font-bold uppercase">Direct connection dry run:</div>
+                      <div className="flex items-center justify-between bg-muted/40 p-2 rounded-lg border border-border/40 gap-3">
+                        <code className="text-primary truncate select-all">{gitCommands.sshTest}</code>
+                        <CopyButton text={gitCommands.sshTest} field="sshTest" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+          </div>
         </div>
 
         {error && (

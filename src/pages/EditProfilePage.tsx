@@ -11,7 +11,7 @@ import type { UpdateProfileInput, SSHKeyType, KeyAlgorithm, Profile } from '@/ty
 import type { GitProvider } from '@/lib/providerUtils';
 import { getProviderConfig } from '@/lib/providerUtils';
 import { electronService } from '@/services/electronService';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldAlert, Sparkles, UserCheck } from 'lucide-react';
 
 export function EditProfilePage() {
   const navigate = useNavigate();
@@ -141,8 +141,9 @@ export function EditProfilePage() {
   if (isLoading) {
     return (
       <AppShell>
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Loader2 className="w-9 h-9 animate-spin text-primary" />
+          <p className="text-xs font-semibold text-muted-foreground animate-pulse">Loading secure configs...</p>
         </div>
       </AppShell>
     );
@@ -151,9 +152,9 @@ export function EditProfilePage() {
   if (!profile) {
     return (
       <AppShell>
-        <div className="max-w-3xl mx-auto text-center py-16">
-          <h2 className="text-2xl font-bold mb-2">Profile Not Found</h2>
-          <p className="text-muted-foreground mb-4">
+        <div className="max-w-3xl mx-auto text-center py-20 space-y-4">
+          <h2 className="text-2xl font-bold">Profile Not Found</h2>
+          <p className="text-muted-foreground text-sm">
             The profile you're looking for doesn't exist.
           </p>
           <Button onClick={() => navigate('/')}>
@@ -166,77 +167,83 @@ export function EditProfilePage() {
 
   return (
     <AppShell>
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
+      <div className="max-w-3xl mx-auto space-y-6 animate-scale-in">
+        {/* Navigation Action Bar */}
+        <div className="flex items-center gap-4 pb-4 border-b border-border/40">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="mb-4"
+            className="rounded-full h-10 w-10 shrink-0"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Profiles
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h2 className="text-3xl font-bold mb-2">Edit {providerConfig.name} Profile</h2>
-          <p className="text-muted-foreground">
-            Update your {providerConfig.name} profile configuration
-          </p>
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight">Edit Profile</h2>
+            <p className="text-xs text-muted-foreground">
+              Modify active configs for {providerConfig.name} profile
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4 bg-card border border-border rounded-lg p-6">
-            <div className="space-y-2">
-              <Label htmlFor="provider">Git Provider *</Label>
+          <div className="space-y-5 bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-6 shadow-soft">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase">Identity Configuration</h3>
+            </div>
+
+            {/* Provider Selection */}
+            <div className="space-y-2 pt-2 border-t border-border/30">
+              <Label htmlFor="provider" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Git Provider *</Label>
               <ProviderSelector value={provider} onChange={setProvider} disabled={isSubmitting} />
-              <p className="text-xs text-muted-foreground">
-                Select the platform that hosts your repositories
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Platform hosting this profile's cloud repositories.
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="name">Profile Name *</Label>
+            {/* Profile Friendly Name */}
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Profile Alias Name *</Label>
               <Input
                 id="name"
-                placeholder="e.g., Work Account, Personal, Client Project"
+                placeholder="e.g., Work Profile, Side Projects"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="h-10 text-sm bg-background/50 border-border/80 focus:border-primary/80 transition-all duration-200"
               />
-              <p className="text-xs text-muted-foreground">
-                A friendly name to identify this profile
-              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+            {/* Email Field */}
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Git Config Email Address *</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="user@example.com"
+                placeholder="developer@workplace.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-10 text-sm bg-background/50 border-border/80 focus:border-primary/80 transition-all duration-200"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="username">{providerConfig.name} Username *</Label>
+            {/* Account Username */}
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="username" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{providerConfig.name} Username *</Label>
               <Input
                 id="username"
-                placeholder={`${providerConfig.name.toLowerCase()}-username`}
+                placeholder="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                className="h-10 text-sm bg-background/50 border-border/80 focus:border-primary/80 transition-all duration-200"
               />
-              {providerConfig.id !== 'other' && (
-                <p className="text-xs text-muted-foreground">
-                  Your {providerConfig.name} account username — SSH host:{' '}
-                  <span className="font-mono">{providerConfig.sshHost}</span>
-                </p>
-              )}
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
+          {/* SSH key configuration */}
+          <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-6 shadow-soft">
             <SSHKeySelector
               value={sshKeyType}
               onChange={setSshKeyType}
@@ -253,7 +260,12 @@ export function EditProfilePage() {
             />
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
+          {/* Profile Cosmetics */}
+          <div className="bg-card/45 backdrop-blur-md border border-border/50 rounded-2xl p-6 shadow-soft">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <h3 className="text-sm font-bold tracking-wider text-muted-foreground uppercase">Cosmetic Theme Customize</h3>
+            </div>
             <ProfileCustomization
               avatar={avatar}
               color={color}
@@ -263,22 +275,25 @@ export function EditProfilePage() {
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive rounded-md">
-              {error}
+            <div className="p-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-2.5 animate-scale-in">
+              <ShieldAlert className="w-5 h-5 text-destructive shrink-0" />
+              <span className="font-semibold">{error}</span>
             </div>
           )}
 
-          <div className="flex gap-3 justify-end">
+          {/* Form Action Controls */}
+          <div className="flex gap-3 justify-end pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate('/')}
               disabled={isSubmitting}
+              className="h-10 active:scale-95 transition-transform"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button type="submit" disabled={isSubmitting} className="h-10 bg-primary hover:bg-primary/95 text-white active:scale-95 transition-transform">
+              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin text-white" />}
               Save Changes
             </Button>
           </div>

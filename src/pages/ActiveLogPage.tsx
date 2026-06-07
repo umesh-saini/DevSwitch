@@ -20,7 +20,10 @@ import {
   Calendar,
   X,
   History,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Activity,
+  ShieldCheck
 } from 'lucide-react';
 
 export function ActiveLogPage() {
@@ -172,21 +175,21 @@ export function ActiveLogPage() {
   const getLogIcon = (action: string) => {
     switch (action) {
       case 'PROFILE_CREATED':
-        return <UserPlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+        return <UserPlus className="w-4 h-4 text-emerald-500" />;
       case 'PROFILE_UPDATED':
-        return <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+        return <UserCheck className="w-4 h-4 text-blue-500" />;
       case 'PROFILE_DELETED':
-        return <UserMinus className="w-4 h-4 text-red-600 dark:text-red-400" />;
+        return <UserMinus className="w-4 h-4 text-red-500" />;
       case 'SSH_KEY_GENERATED':
-        return <KeyRound className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
+        return <KeyRound className="w-4 h-4 text-amber-500" />;
       case 'SSH_KEY_IMPORTED':
-        return <KeyRound className="w-4 h-4 text-violet-600 dark:text-violet-400" />;
+        return <KeyRound className="w-4 h-4 text-purple-500" />;
       case 'SSH_CONFIG_UPDATED':
-        return <FileCode2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
+        return <FileCode2 className="w-4 h-4 text-indigo-500" />;
       case 'PROVIDER_KEY_UPLOADED':
-        return <Share2 className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
+        return <Share2 className="w-4 h-4 text-sky-500" />;
       case 'PROVIDER_DISCONNECTED':
-        return <PlugZap className="w-4 h-4 text-rose-600 dark:text-rose-400" />;
+        return <PlugZap className="w-4 h-4 text-rose-500" />;
       default:
         return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
@@ -195,22 +198,22 @@ export function ActiveLogPage() {
   const getLogBg = (action: string) => {
     switch (action) {
       case 'PROFILE_CREATED':
-        return 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50';
+        return 'bg-emerald-500/10 border-emerald-500/25';
       case 'PROFILE_UPDATED':
-        return 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50';
+        return 'bg-blue-500/10 border-blue-500/25';
       case 'PROFILE_DELETED':
-        return 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50';
+        return 'bg-red-500/10 border-red-500/25';
       case 'SSH_KEY_GENERATED':
       case 'SSH_KEY_IMPORTED':
-        return 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50';
+        return 'bg-amber-500/10 border-amber-500/25';
       case 'SSH_CONFIG_UPDATED':
-        return 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50';
+        return 'bg-indigo-500/10 border-indigo-500/25';
       case 'PROVIDER_KEY_UPLOADED':
-        return 'bg-sky-50 dark:bg-sky-950/20 border-sky-200 dark:border-sky-900/50';
+        return 'bg-sky-500/10 border-sky-500/25';
       case 'PROVIDER_DISCONNECTED':
-        return 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50';
+        return 'bg-rose-500/10 border-rose-500/25';
       default:
-        return 'bg-muted/50 border-border';
+        return 'bg-muted/40 border-border/40';
     }
   };
 
@@ -237,22 +240,21 @@ export function ActiveLogPage() {
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="max-w-4xl mx-auto space-y-6 animate-scale-in">
+        {/* Header Action Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
-              size="icon" 
               onClick={() => navigate('/setting')}
-              className="rounded-full h-10 w-10 shrink-0"
+              className="rounded-full h-10 w-10 shrink-0 p-0 hover:bg-background/80"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h2 className="text-3xl font-bold tracking-tight">Activity Log</h2>
-              <p className="text-muted-foreground text-sm">
-                System and profile events audit trail
+              <h2 className="text-2xl font-extrabold tracking-tight">Activity Log</h2>
+              <p className="text-xs text-muted-foreground">
+                Chronological system action logs and security handshake audit streams
               </p>
             </div>
           </div>
@@ -264,20 +266,20 @@ export function ActiveLogPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setDeleteBeforeOpen(true)}
-                  className="gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-950 dark:text-orange-400 dark:hover:bg-orange-950/20"
+                  className="h-8.5 text-xs font-bold gap-1.5 border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-950 dark:text-orange-400 dark:hover:bg-orange-950/20 rounded-xl"
                 >
-                  <History className="w-4 h-4" />
-                  Delete Older Logs
+                  <History className="w-3.5 h-3.5" />
+                  Prune Older Records
                 </Button>
                 
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={clearLogs}
-                  className="gap-1.5"
+                  className="h-8.5 text-xs font-bold gap-1.5 rounded-xl"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Clear All
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Clear Archive
                 </Button>
               </>
             )}
@@ -285,49 +287,49 @@ export function ActiveLogPage() {
         </div>
 
         {/* Filters and Actions Toolbar */}
-        <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border/50">
-          <div className="flex flex-col sm:flex-row gap-3">
+        <div className="space-y-4 bg-card/45 backdrop-blur-md p-5 rounded-2xl border border-border/50 shadow-soft">
+          <div className="flex flex-col md:flex-row gap-3">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-muted-foreground" />
+              <Search className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search logs..."
+                placeholder="Search events, messages or action keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm bg-background border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-2 text-xs bg-background/50 border border-border/80 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-primary focus:border-primary h-10 font-medium"
               />
             </div>
 
             {/* Filter Dropdown */}
-            <div className="relative min-w-[180px]">
-              <Filter className="absolute left-3 top-2.5 h-4.5 w-4.5 text-muted-foreground pointer-events-none" />
+            <div className="relative min-w-[200px]">
+              <Filter className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-muted-foreground pointer-events-none" />
               <select
                 value={filterAction}
                 onChange={(e) => setFilterAction(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm bg-background border border-border rounded-lg appearance-none focus:outline-hidden focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-2 text-xs bg-background/50 border border-border/80 rounded-xl appearance-none focus:outline-hidden focus:ring-1 focus:ring-primary focus:border-primary h-10 font-bold"
               >
-                <option value="ALL">All Actions</option>
+                <option value="ALL">All Event Types</option>
                 <option value="PROFILE_CREATED">Profile Created</option>
                 <option value="PROFILE_UPDATED">Profile Updated</option>
                 <option value="PROFILE_DELETED">Profile Deleted</option>
                 <option value="SSH_KEY_GENERATED">SSH Key Generated</option>
                 <option value="SSH_KEY_IMPORTED">SSH Key Imported</option>
                 <option value="SSH_CONFIG_UPDATED">SSH Config Updated</option>
-                <option value="PROVIDER_KEY_UPLOADED">Key Uploaded</option>
-                <option value="PROVIDER_DISCONNECTED">Account Disconnected</option>
+                <option value="PROVIDER_KEY_UPLOADED">Key Handshake</option>
+                <option value="PROVIDER_DISCONNECTED">Disconnect Handshake</option>
               </select>
             </div>
             
             {/* Export Buttons */}
             {filteredLogs.length > 0 && (
-              <div className="flex gap-1.5 self-stretch">
-                <Button variant="outline" size="sm" onClick={exportCSV} className="flex-1 sm:flex-initial gap-1.5 px-3">
-                  <Download className="w-3.5 h-3.5" />
+              <div className="flex gap-2 shrink-0">
+                <Button variant="outline" onClick={exportCSV} className="h-10 text-xs font-bold px-4">
+                  <Download className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={exportJSON} className="flex-1 sm:flex-initial gap-1.5 px-3">
-                  <Download className="w-3.5 h-3.5" />
+                <Button variant="outline" onClick={exportJSON} className="h-10 text-xs font-bold px-4">
+                  <FileText className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
                   JSON
                 </Button>
               </div>
@@ -335,51 +337,51 @@ export function ActiveLogPage() {
           </div>
 
           {/* Date Picker Filters */}
-          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border/40">
-            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground shrink-0">
-              <Calendar className="w-3.5 h-3.5" />
-              DATE RANGE:
+          <div className="flex flex-wrap items-center gap-3 pt-3.5 border-t border-border/30">
+            <div className="flex items-center gap-2 text-[10px] font-extrabold text-muted-foreground tracking-wider shrink-0">
+              <Calendar className="w-3.5 h-3.5 text-primary" />
+              DATE BOUNDS
             </div>
             <div className="flex items-center gap-2">
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-background border border-border text-xs px-2.5 py-1 rounded-md focus:outline-hidden focus:ring-1 focus:ring-primary"
+                className="bg-background/50 border border-border/80 text-[11px] px-2.5 py-1.5 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary font-semibold"
               />
-              <span className="text-xs text-muted-foreground">to</span>
+              <span className="text-[11px] text-muted-foreground font-medium">to</span>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-background border border-border text-xs px-2.5 py-1 rounded-md focus:outline-hidden focus:ring-1 focus:ring-primary"
+                className="bg-background/50 border border-border/80 text-[11px] px-2.5 py-1.5 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary font-semibold"
               />
             </div>
             
             {/* Presets */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5 ml-auto">
               <button
                 onClick={() => applyDatePreset(0)}
-                className="text-[10px] bg-background hover:bg-muted text-foreground border px-2 py-0.5 rounded-md font-medium"
+                className="text-[10px] bg-background border border-border/80 hover:bg-muted/50 text-foreground px-2.5 py-1 rounded-lg font-bold"
               >
                 Today
               </button>
               <button
                 onClick={() => applyDatePreset(7)}
-                className="text-[10px] bg-background hover:bg-muted text-foreground border px-2 py-0.5 rounded-md font-medium"
+                className="text-[10px] bg-background border border-border/80 hover:bg-muted/50 text-foreground px-2.5 py-1 rounded-lg font-bold"
               >
-                Last 7 Days
+                7d range
               </button>
               <button
                 onClick={() => applyDatePreset(30)}
-                className="text-[10px] bg-background hover:bg-muted text-foreground border px-2 py-0.5 rounded-md font-medium"
+                className="text-[10px] bg-background border border-border/80 hover:bg-muted/50 text-foreground px-2.5 py-1 rounded-lg font-bold"
               >
-                Last 30 Days
+                30d range
               </button>
               {(startDate || endDate) && (
                 <button
                   onClick={resetDateFilters}
-                  className="flex items-center gap-0.5 text-[10px] text-destructive hover:bg-destructive/10 px-2 py-0.5 rounded-md font-semibold border border-destructive/20"
+                  className="flex items-center gap-1 text-[10px] text-destructive hover:bg-destructive/10 px-2.5 py-1 rounded-lg font-bold border border-destructive/20"
                 >
                   <X className="w-3 h-3" />
                   Clear Date
@@ -391,8 +393,8 @@ export function ActiveLogPage() {
 
         {/* Custom Delete Before Modal Dialog */}
         {deleteBeforeOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in-0 duration-200">
-            <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-xl p-6 relative flex flex-col gap-4 animate-in scale-in-95 duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in-0 duration-200 backdrop-blur-xs">
+            <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-xl p-6 relative flex flex-col gap-4 animate-in scale-in-95 duration-200">
               <button 
                 onClick={() => setDeleteBeforeOpen(false)}
                 className="absolute top-4 right-4 text-muted-foreground hover:text-foreground rounded-full p-1 hover:bg-muted transition-colors"
@@ -405,8 +407,8 @@ export function ActiveLogPage() {
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">Delete Older Activity Logs</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-base font-extrabold tracking-tight">Delete Older Activity Logs</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Select a cutoff date to clean up your logs database. All log records before this date will be permanently deleted.
                   </p>
                 </div>
@@ -414,7 +416,7 @@ export function ActiveLogPage() {
 
               {/* Presets */}
               <div className="space-y-2 pt-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Quick Presets</label>
+                <label className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider">Quick Presets</label>
                 <div className="grid grid-cols-3 gap-2">
                   <Button variant="outline" size="sm" className="text-xs py-1" onClick={() => handleDeletePreset(7)}>
                     Older than 7d
@@ -430,13 +432,13 @@ export function ActiveLogPage() {
 
               {/* Custom Date Selection */}
               <div className="space-y-2 pt-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Custom Date Cutoff</label>
+                <label className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wider block">Custom Date Cutoff</label>
                 <div className="flex gap-2">
                   <input
                     type="date"
                     value={deleteBeforeDate}
                     onChange={(e) => setDeleteBeforeDate(e.target.value)}
-                    className="flex-1 bg-background border border-border text-sm px-3 py-2 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary"
+                    className="flex-1 bg-background border border-border text-xs px-3 py-2 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-primary"
                   />
                   <Button 
                     variant="destructive"
@@ -445,7 +447,7 @@ export function ActiveLogPage() {
                     onClick={() => handleClearBefore(deleteBeforeDate)}
                     className="px-4"
                   >
-                    Delete Older
+                    Prune Older
                   </Button>
                 </div>
               </div>
@@ -453,62 +455,62 @@ export function ActiveLogPage() {
           </div>
         )}
 
-        {/* Logs List */}
-        <Card className="border border-border bg-card/50 backdrop-blur-xs">
+        {/* Logs List Chronological Panel */}
+        <Card className="border border-border/50 bg-card/45 backdrop-blur-md rounded-2xl shadow-soft">
           <CardContent className="p-6">
             {filteredLogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                <Clock className="w-12 h-12 text-muted-foreground/40" />
+                <Activity className="w-12 h-12 text-muted-foreground/30 animate-pulse-slow" />
                 <div className="space-y-1">
-                  <p className="text-lg font-semibold">No logs found</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base font-extrabold">No matching audit records</p>
+                  <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
                     {logs.length === 0 
-                      ? "System events will be shown here once you start editing profiles or generating keys." 
-                      : "Try widening your search terms or date selection range."}
+                      ? "Handshake and profile switching actions will populate audit history logs here." 
+                      : "Refine or widen your active queries or date bound range selection."}
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="relative border-l border-border ml-3.5 pl-6 space-y-8">
+              <div className="relative border-l border-border/50 ml-4 pl-6 space-y-7">
                 {filteredLogs.map((log) => (
-                  <div key={log.id} className="relative group">
+                  <div key={log.id} className="relative group animate-scale-in">
                     {/* Timeline dot */}
-                    <div className={`absolute -left-[38px] top-1.5 p-1.5 rounded-full border shadow-xs shrink-0 z-10 ${getLogBg(log.action)}`}>
+                    <div className={`absolute -left-[37px] top-1 p-1.5 rounded-full border shadow-sm shrink-0 z-10 ${getLogBg(log.action)}`}>
                       {getLogIcon(log.action)}
                     </div>
                     
-                    {/* Log detail card */}
-                    <div className="space-y-1.5">
+                    {/* Log detail content */}
+                    <div className="space-y-1">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <span className="text-sm font-semibold tracking-tight text-foreground/90 leading-none">
+                        <span className="text-sm font-bold tracking-tight text-foreground leading-snug">
                           {log.message}
                         </span>
-                        <span className="text-xs text-muted-foreground shrink-0">
+                        <span className="text-[10px] font-bold text-muted-foreground shrink-0 bg-muted/40 px-2 py-0.5 rounded-lg border border-border/30">
                           {formatDate(log.timestamp)}
                         </span>
                       </div>
                       
                       {/* Meta information tags */}
-                      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                        <span className="bg-muted px-2 py-0.5 rounded-md font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-                          {log.action.replace('_', ' ')}
+                      <div className="flex flex-wrap items-center gap-2 pt-1.5 text-[10px]">
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md font-bold tracking-wide uppercase">
+                          {log.action.replace(/_/g, ' ')}
                         </span>
 
                         {log.details?.provider && (
-                          <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md capitalize font-medium">
+                          <span className="bg-purple-500/10 text-purple-500 px-2 py-0.5 rounded-md capitalize font-bold">
                             {log.details.provider}
                           </span>
                         )}
 
                         {log.details?.algorithm && (
-                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/50 dark:border-amber-900/30 px-2 py-0.5 rounded-md text-[10px] uppercase font-semibold">
-                            {log.details.algorithm}
+                          <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-md font-bold">
+                            {log.details.algorithm.toUpperCase()}
                           </span>
                         )}
                         
                         {log.details?.keyPath && (
-                          <span className="text-[10px] text-muted-foreground font-mono bg-muted/30 px-2 py-0.5 rounded border border-border/40">
-                            Path: {log.details.keyPath}
+                          <span className="text-[10px] text-muted-foreground font-mono bg-muted/30 px-2 py-0.5 rounded-md border border-border/30">
+                            Path: {log.details.keyPath.split('/').pop()}
                           </span>
                         )}
                       </div>
