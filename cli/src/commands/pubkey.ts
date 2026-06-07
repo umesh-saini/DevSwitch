@@ -1,6 +1,7 @@
 import { storageService, sshKeyService } from "@devswitch/core";
 import type { ParsedArgs } from "../args.ts";
-import { error } from "../ui.ts";
+import { error, c } from "../ui.ts";
+import { copyToClipboard } from "../utils/clipboard.ts";
 
 export async function pubkeyCommand(args: ParsedArgs): Promise<number> {
   const identifier = args.positionals[0];
@@ -24,6 +25,12 @@ export async function pubkeyCommand(args: ParsedArgs): Promise<number> {
   if (!content) {
     error(`Public key not found for ${profile.keyPath}.pub`);
     return 1;
+  }
+
+  // Copy to clipboard automatically
+  const copied = await copyToClipboard(content);
+  if (copied) {
+    console.error(c.green("✔ Public key copied to clipboard!"));
   }
 
   // Print only the key so it can be piped (e.g. `devswitch pubkey work | pbcopy`)

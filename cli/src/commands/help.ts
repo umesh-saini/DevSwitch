@@ -16,7 +16,7 @@ ${c.bold("COMMANDS")}
   ${c.cyan("show")} <profile>           Show full details of a profile     ${c.gray("(alias: view, info)")}
   ${c.cyan("sync")}                     Import unmanaged SSH keys as profiles
   ${c.cyan("test")} <profile>           Test the SSH connection for a profile
-  ${c.cyan("pubkey")} <profile>         Print a profile's public key
+  ${c.cyan("pubkey")} <profile>         Print & copy a profile's public key ${c.gray("(alias: key, sshkey, pub)")}
   ${c.cyan("clone")} <url> [dir]        Clone a repo using a profile's identity
   ${c.cyan("logs")}                     Show recent activity log
   ${c.cyan("path")}                     Show the shared data directory path
@@ -141,7 +141,15 @@ OPTIONS
 Rewrites the URL to use the profile's SSH host alias and sets the repo's local
 git user.name / user.email.`,
 
-  pubkey: `${c.bold("devswitch pubkey")} <profile> — print a profile's SSH public key`,
+  pubkey: `${c.bold("devswitch pubkey")} <profile> — print & copy a profile's SSH public key
+
+USAGE
+  devswitch pubkey <profile>
+
+ALIASES
+  key, sshkey, ssh-key, publickey, pub
+
+Copies the key to the clipboard automatically.`,
   logs: `${c.bold("devswitch logs")} — show recent activity\n\nUSAGE\n  devswitch logs [--limit <n>] [--json]`,
   path: `${c.bold("devswitch path")} — print the shared data directory path`,
   doctor: `${c.bold("devswitch doctor")} — diagnose environment and data store`,

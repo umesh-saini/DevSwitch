@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { profileManager } from "@devswitch/core";
+import { profileManager, sshKeyService } from "@devswitch/core";
 import type {
   CreateProfileInput,
   SSHKeyType,
@@ -10,6 +10,7 @@ import type { ParsedArgs } from "../args.ts";
 import { flagStr, flagBool } from "../args.ts";
 import { c, error, success, info } from "../ui.ts";
 import { ask, askSecret, select, confirm } from "../prompt.ts";
+import { copyToClipboard } from "../utils/clipboard.ts";
 
 const PROVIDERS: GitProvider[] = [
   "github",
@@ -146,7 +147,16 @@ export async function addCommand(args: ParsedArgs): Promise<number> {
     success(
       `Created profile ${c.bold(profile.name)} ${c.gray(`(${profile.username})`)}`,
     );
-    if (profile.keyPath) info(`SSH key: ${profile.keyPath}`);
+    if (profile.keyPath) {
+      info(`SSH key: ${profile.keyPath}`);
+      const pubKey = sshKeyService.getPublicKeyContent(profile.keyPath);
+      if (pubKey) {
+        const copied = await copyToClipboard(pubKey);
+        if (copied) {
+          info(`${c.green("✔ Public key copied to clipboard!")} Ready to paste into GitHub/GitLab.`);
+        }
+      }
+    }
     if (profile.hostConfigured) info("SSH config entry added.");
     console.log("");
     info(`Activate it with: ${c.cyan(`devswitch use ${profile.username}`)}`);

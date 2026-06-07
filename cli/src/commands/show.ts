@@ -2,10 +2,12 @@ import {
   storageService,
   sshConfigService,
   getProviderSSHConfig,
+  sshKeyService,
 } from "@devswitch/core";
 import type { ParsedArgs } from "../args.ts";
 import { flagBool } from "../args.ts";
 import { c, error, heading } from "../ui.ts";
+import { copyToClipboard } from "../utils/clipboard.ts";
 
 export async function showCommand(args: ParsedArgs): Promise<number> {
   const identifier = args.positionals[0];
@@ -55,6 +57,20 @@ export async function showCommand(args: ParsedArgs): Promise<number> {
   }
   line("Created", new Date(profile.createdAt).toLocaleString());
   line("Updated", new Date(profile.updatedAt).toLocaleString());
+
+  if (profile.keyPath) {
+    const pubKey = sshKeyService.getPublicKeyContent(profile.keyPath);
+    if (pubKey) {
+      console.log("");
+      console.log(`  ${c.gray("Public key:")}`);
+      console.log(`  ${pubKey}`);
+      
+      const copied = await copyToClipboard(pubKey);
+      if (copied) {
+        console.log(`  ${c.green("✔ Public key copied to clipboard!")}`);
+      }
+    }
+  }
 
   console.log("");
   console.log(
