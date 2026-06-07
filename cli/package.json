@@ -1,6 +1,6 @@
 {
   "name": "devswitch-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Standalone command-line tool for DevSwitch — manage multiple Git profiles and SSH keys. Shares its database with the DevSwitch desktop app.",
   "type": "module",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "files": [
     "bin/",
+    "scripts/",
     "README.md"
   ],
   "scripts": {
