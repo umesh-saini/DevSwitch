@@ -13,7 +13,8 @@
   "scripts": {
     "build": "node ./build.mjs",
     "dev": "node --experimental-strip-types ./src/index.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "node scripts/setup-completion.cjs"
   },
   "engines": {
     "node": ">=18"
@@ -45,5 +46,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.24.0"
+  },
+  "dependencies": {
+    "omelette": "^0.4.17"
   }
 }

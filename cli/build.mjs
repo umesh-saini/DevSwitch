@@ -49,7 +49,7 @@ await esbuild.build({
     __DEVSWITCH_CLI_VERSION__: JSON.stringify(cliVersion),
   },
   // electron-store is never imported by core anymore, but guard just in case.
-  external: [],
+  external: ["omelette"],
   logLevel: "info",
   sourcemap: false,
   minify: false,

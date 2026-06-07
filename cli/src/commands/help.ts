@@ -21,6 +21,7 @@ ${c.bold("COMMANDS")}
   ${c.cyan("logs")}                     Show recent activity log
   ${c.cyan("path")}                     Show the shared data directory path
   ${c.cyan("doctor")}                   Diagnose environment & data store
+  ${c.cyan("completion")}               Install tab completion             ${c.gray("(with --install)")}
   ${c.cyan("help")} [command]           Show help (this screen)
   ${c.cyan("version")}                  Print the CLI version              ${c.gray("(alias: -v)")}
 
@@ -154,6 +155,13 @@ Copies the key to the clipboard automatically.`,
   path: `${c.bold("devswitch path")} — print the shared data directory path`,
   doctor: `${c.bold("devswitch doctor")} — diagnose environment and data store`,
   current: `${c.bold("devswitch current")} — show the active profile (based on global git config)`,
+  completion: `${c.bold("devswitch completion")} — install shell tab completion
+
+USAGE
+  devswitch completion --install
+
+WHAT IT DOES
+  Installs shell autocompletion into the appropriate user shell startup script (like ~/.bashrc or ~/.zshrc or fish config).`,
 };
 
 export function printHelp(command?: string): void {

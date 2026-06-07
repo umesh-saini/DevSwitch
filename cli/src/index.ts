@@ -1,4 +1,4 @@
-import { logService } from "@devswitch/core";
+import { logService, storageService } from "@devswitch/core";
 import { parseArgs, flagBool } from "./args.ts";
 import { error } from "./ui.ts";
 import { CLI_VERSION } from "./version.ts";
@@ -16,6 +16,53 @@ import { logsCommand } from "./commands/logs.ts";
 import { pathCommand } from "./commands/path.ts";
 import { doctorCommand } from "./commands/doctor.ts";
 import { currentCommand } from "./commands/current.ts";
+import { completionCommand } from "./commands/completion.ts";
+// @ts-ignore
+import omelette from "omelette";
+
+// Setup shell autocompletion
+const completion = omelette("devswitch <action> <profile>");
+
+completion.on("action", ({ reply }) => {
+  reply([
+    "add", "create", "new",
+    "use", "switch",
+    "remove", "rm", "delete",
+    "list", "ls",
+    "show", "view", "info",
+    "sync",
+    "test",
+    "pubkey", "key", "sshkey", "ssh-key", "publickey", "pub",
+    "clone",
+    "logs", "log",
+    "path",
+    "doctor",
+    "current", "whoami",
+    "completion"
+  ]);
+});
+
+completion.on("profile", ({ reply, before }) => {
+  const profileActions = [
+    "use", "switch",
+    "remove", "rm", "delete",
+    "show", "view", "info",
+    "test",
+    "pubkey", "key", "sshkey", "ssh-key", "publickey", "pub"
+  ];
+  if (profileActions.includes(before)) {
+    try {
+      const profiles = storageService.getAllProfiles();
+      reply(profiles.map(p => p.name));
+    } catch {
+      reply([]);
+    }
+  } else {
+    reply([]);
+  }
+});
+
+completion.init();
 
 // Anything logged from the CLI is tagged as originating from the terminal.
 logService.setDefaultSource("cli");
@@ -52,6 +99,7 @@ const COMMANDS: Record<string, CommandFn> = {
   doctor: doctorCommand,
   current: currentCommand,
   whoami: currentCommand,
+  completion: completionCommand,
 };
 
 async function main(): Promise<number> {
