@@ -42,6 +42,13 @@ import {
   Check,
   CheckCircle,
   Play,
+  Database,
+  Download,
+  Upload,
+  RefreshCw,
+  Lock,
+  Unlock,
+  FileJson,
 } from "lucide-react";
 import type { SSHConfigEntry } from "@/types/sshConfig";
 import { v4 as uuidv4 } from "uuid";
@@ -56,8 +63,8 @@ export function SettingsPage() {
   const [logCount, setLogCount] = useState(0);
   const [appVersion, setAppVersion] = useState("1.0.0");
 
-  // Tab State: 'general', 'ssh', or 'cli'
-  const [activeTab, setActiveTab] = useState<"general" | "ssh" | "cli">(
+  // Tab State: 'general', 'ssh', 'cli', or 'backup'
+  const [activeTab, setActiveTab] = useState<"general" | "ssh" | "cli" | "backup">(
     "general",
   );
 
@@ -73,6 +80,24 @@ export function SettingsPage() {
   // CLI Copied Field
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
 
+  // Backup & Restore State
+  const [autoBackupEnabled, setAutoBackupEnabledState] = useState(false);
+  const [backups, setBackups] = useState<any[]>([]);
+  const [loadingBackups, setLoadingBackups] = useState(false);
+  
+  // Export Settings
+  const [exportWithSSH, setExportWithSSH] = useState(true);
+  const [exportPasswordProtected, setExportPasswordProtected] = useState(false);
+  const [exportPassword, setExportPassword] = useState("");
+  
+  // Import Settings & Modal
+  const [importNewSSH, setImportNewSSH] = useState(false);
+  const [importPassword, setImportPassword] = useState("");
+  const [pendingImportPath, setPendingImportPath] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   useEffect(() => {
     checkPermissions();
     fetchLogCount();
@@ -82,8 +107,157 @@ export function SettingsPage() {
   useEffect(() => {
     if (activeTab === "ssh") {
       loadConfig();
+    } else if (activeTab === "backup") {
+      loadBackupSettings();
     }
   }, [activeTab]);
+
+  const loadBackupSettings = async () => {
+    if (window.electronAPI?.backup) {
+      try {
+        setLoadingBackups(true);
+        const autoEnabled = await window.electronAPI.backup.isAutoEnabled();
+        setAutoBackupEnabledState(autoEnabled);
+        
+        const list = await window.electronAPI.backup.list();
+        setBackups(list);
+      } catch (err) {
+        console.error("Failed to load backup settings:", err);
+      } finally {
+        setLoadingBackups(false);
+      }
+    }
+  };
+
+  const handleToggleAutoBackup = async (enabled: boolean) => {
+    if (window.electronAPI?.backup) {
+      try {
+        await window.electronAPI.backup.setAutoEnabled(enabled);
+        setAutoBackupEnabledState(enabled);
+        setSuccessMessage(`Auto-backup has been ${enabled ? "enabled" : "disabled"}.`);
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } catch (err) {
+        console.error("Failed to set auto-backup status:", err);
+      }
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    if (window.electronAPI?.backup) {
+      try {
+        const result = await window.electronAPI.backup.create();
+        if (result.success) {
+          setSuccessMessage(`Backup saved successfully to ${result.filePath}`);
+          loadBackupSettings();
+          setTimeout(() => setSuccessMessage(null), 4000);
+        } else if (result.error && !result.error.includes("canceled")) {
+          setImportError(result.error);
+          setTimeout(() => setImportError(null), 4000);
+        }
+      } catch (err) {
+        console.error("Failed to create backup:", err);
+      }
+    }
+  };
+
+  const handleRestoreBackup = async (filePath: string) => {
+    if (window.electronAPI?.backup) {
+      if (!confirm("Are you sure you want to restore this backup? This will overwrite existing profiles and merge logs.")) {
+        return;
+      }
+      try {
+        const result = await window.electronAPI.backup.restore(filePath);
+        if (result.success) {
+          setSuccessMessage("Backup restored successfully!");
+          setTimeout(() => setSuccessMessage(null), 4000);
+        } else {
+          setImportError(result.error || "Failed to restore backup");
+          setTimeout(() => setImportError(null), 4000);
+        }
+      } catch (err) {
+        console.error("Failed to restore backup:", err);
+      }
+    }
+  };
+
+  const handleDeleteBackup = async (filename: string) => {
+    if (window.electronAPI?.backup) {
+      if (!confirm(`Are you sure you want to permanently delete backup ${filename}?`)) {
+        return;
+      }
+      try {
+        const result = await window.electronAPI.backup.delete(filename);
+        if (result.success) {
+          setSuccessMessage("Backup deleted successfully.");
+          loadBackupSettings();
+          setTimeout(() => setSuccessMessage(null), 3000);
+        } else {
+          setImportError(result.error || "Failed to delete backup");
+          setTimeout(() => setImportError(null), 3000);
+        }
+      } catch (err) {
+        console.error("Failed to delete backup:", err);
+      }
+    }
+  };
+
+  const handleExportData = async () => {
+    if (window.electronAPI?.transfer) {
+      try {
+        const password = exportPasswordProtected ? exportPassword : undefined;
+        if (exportPasswordProtected && !password) {
+          setImportError("Please enter a password for protection.");
+          setTimeout(() => setImportError(null), 3000);
+          return;
+        }
+        
+        const result = await window.electronAPI.transfer.exportData({
+          withSSH: exportWithSSH,
+          password
+        });
+        
+        if (result.success) {
+          setSuccessMessage(`Data exported successfully to ${result.filePath}`);
+          setTimeout(() => setSuccessMessage(null), 4000);
+          setExportPassword("");
+        } else if (result.error && !result.error.includes("canceled")) {
+          setImportError(result.error);
+          setTimeout(() => setImportError(null), 4000);
+        }
+      } catch (err) {
+        console.error("Failed to export data:", err);
+      }
+    }
+  };
+
+  const handleImportData = async (filePath?: string, passwordInput?: string) => {
+    if (window.electronAPI?.transfer) {
+      try {
+        setImportError(null);
+        const result = await window.electronAPI.transfer.importData({
+          newSSH: importNewSSH,
+          password: passwordInput,
+          filePath: filePath || undefined
+        });
+
+        if (result.success) {
+          setSuccessMessage(`Successfully imported: ${result.addedCount ?? 0} added, ${result.updatedCount ?? 0} updated, ${result.skippedCount ?? 0} skipped.`);
+          setShowPasswordModal(false);
+          setPendingImportPath(null);
+          setImportPassword("");
+          setTimeout(() => setSuccessMessage(null), 4000);
+        } else if (result.requiresPassword) {
+          setPendingImportPath(result.filePath || null);
+          setShowPasswordModal(true);
+        } else if (result.error && !result.error.includes("canceled")) {
+          setImportError(result.error);
+          setTimeout(() => setImportError(null), 4000);
+        }
+      } catch (err) {
+        console.error("Failed to import data:", err);
+      }
+    }
+  };
 
   const checkPermissions = async () => {
     if (window.electronAPI?.permissions) {
@@ -256,7 +430,7 @@ export function SettingsPage() {
         </div>
 
         {/* Sliding Tab Header Selector */}
-        <div className="flex bg-muted/30 dark:bg-muted/10 p-1.5 rounded-xl border border-border/40 gap-1 max-w-md">
+        <div className="flex bg-muted/30 dark:bg-muted/10 p-1.5 rounded-xl border border-border/40 gap-1 max-w-lg">
           <button
             onClick={() => setActiveTab("general")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 ${
@@ -278,6 +452,17 @@ export function SettingsPage() {
           >
             <FileText className="w-4 h-4" />
             SSH Config
+          </button>
+          <button
+            onClick={() => setActiveTab("backup")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 active:scale-95 ${
+              activeTab === "backup"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            Backups & Data
           </button>
           <button
             onClick={() => setActiveTab("cli")}
@@ -809,7 +994,347 @@ export function SettingsPage() {
             </Card>
           </div>
         )}
+
+        {/* Backups & Restore Tab View Content */}
+        {activeTab === "backup" && (
+          <div className="space-y-6 animate-scale-in">
+            {successMessage && (
+              <div className="p-4 rounded-xl border border-green-200 bg-green-50/70 text-green-950 dark:bg-green-950/20 dark:border-green-900/50 dark:text-green-200 text-sm flex items-center gap-2.5 shadow-xs animate-scale-in">
+                <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                <span className="font-semibold">{successMessage}</span>
+              </div>
+            )}
+            {importError && !showPasswordModal && (
+              <div className="p-4 rounded-xl border border-red-200 bg-red-50/70 text-red-950 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-200 text-sm flex items-center gap-2.5 shadow-xs animate-scale-in">
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                <span className="font-semibold">{importError}</span>
+              </div>
+            )}
+
+            {/* Auto-Backup Configurations */}
+            <Card className="border border-border/50 bg-card/45 backdrop-blur-md shadow-soft rounded-2xl">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base font-extrabold flex items-center gap-2">
+                  <Database className="w-5 h-5 text-primary" />
+                  <span>Backup Settings & Auto-Backup</span>
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Configure automated snapshots of your profiles database.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-t border-border/30">
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">
+                      Automatic Profile Backups
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Automatically create snapshots when profiles are added, updated, or removed
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleToggleAutoBackup(!autoBackupEnabled)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                        autoBackupEnabled ? "bg-primary" : "bg-muted"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          autoBackupEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-bold text-foreground min-w-[30px]">
+                      {autoBackupEnabled ? "On" : "Off"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-t border-border/30">
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">
+                      Manual Backup Snapshot
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      Export a full JSON backup of profiles and log activity immediately
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleCreateBackup}
+                    variant="outline"
+                    className="self-start sm:self-auto h-9"
+                  >
+                    <Save className="w-4 h-4 mr-1.5" />
+                    Create Backup File
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Profile Import / Export Transfer Panel */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Export Card */}
+              <Card className="border border-border/50 bg-card/45 backdrop-blur-md shadow-soft rounded-2xl">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-extrabold flex items-center gap-2">
+                    <Upload className="w-5 h-5 text-blue-500" />
+                    <span>Secure Export</span>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Export your profile data to a JSON file.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Export Options */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="export-with-ssh" className="text-xs font-bold text-muted-foreground cursor-pointer">
+                        Include SSH Keys
+                      </Label>
+                      <button
+                        id="export-with-ssh"
+                        onClick={() => setExportWithSSH(!exportWithSSH)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                          exportWithSSH ? "bg-blue-500" : "bg-muted"
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                            exportWithSSH ? "translate-x-4" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="export-pwd-protected" className="text-xs font-bold text-muted-foreground cursor-pointer">
+                        Password Protection
+                      </Label>
+                      <button
+                        id="export-pwd-protected"
+                        onClick={() => setExportPasswordProtected(!exportPasswordProtected)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                          exportPasswordProtected ? "bg-blue-500" : "bg-muted"
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                            exportPasswordProtected ? "translate-x-4" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {exportPasswordProtected && (
+                      <div className="space-y-1.5 animate-scale-in pt-1">
+                        <Label htmlFor="export-pwd" className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                          Archive Password
+                        </Label>
+                        <Input
+                          id="export-pwd"
+                          type="password"
+                          value={exportPassword}
+                          onChange={(e) => setExportPassword(e.target.value)}
+                          placeholder="Password to encrypt database archive"
+                          className="h-9 bg-background/50 font-mono text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={handleExportData}
+                    className="w-full h-9 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs"
+                  >
+                    <Upload className="w-4 h-4 mr-1.5" />
+                    Export Profiles Archive
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Import Card */}
+              <Card className="border border-border/50 bg-card/45 backdrop-blur-md shadow-soft rounded-2xl">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base font-extrabold flex items-center gap-2">
+                    <Download className="w-5 h-5 text-emerald-500" />
+                    <span>Secure Import</span>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Restore and merge profiles from an export archive.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Import Options */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="import-new-ssh" className="text-xs font-bold text-muted-foreground cursor-pointer block">
+                          Generate Fresh SSH Keys
+                        </Label>
+                        <span className="text-[10px] text-muted-foreground">
+                          Create brand new keys instead of restoring exported key files
+                        </span>
+                      </div>
+                      <button
+                        id="import-new-ssh"
+                        onClick={() => setImportNewSSH(!importNewSSH)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                          importNewSSH ? "bg-emerald-500" : "bg-muted"
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                            importNewSSH ? "translate-x-4" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => handleImportData()}
+                    className="w-full h-9 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs mt-4"
+                  >
+                    <Download className="w-4 h-4 mr-1.5" />
+                    Import Profiles Archive
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Backup History Snapshots List */}
+            <Card className="border border-border/50 bg-card/45 backdrop-blur-md shadow-soft rounded-2xl">
+              <CardHeader className="pb-4 flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-base font-extrabold flex items-center gap-2">
+                    <RefreshCw className="w-5 h-5 text-primary" />
+                    <span>Backup Snapshots History</span>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    View and restore recent automated system recovery snapshots
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  onClick={loadBackupSettings}
+                  disabled={loadingBackups}
+                  className="rounded-full h-8 w-8 p-0 hover:bg-background/85"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingBackups ? "animate-spin" : ""}`} />
+                </Button>
+              </CardHeader>
+              <CardContent className="pb-5">
+                {loadingBackups ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-2">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <p className="text-[10px] text-muted-foreground font-medium">Fetching snapshot indices...</p>
+                  </div>
+                ) : backups.length === 0 ? (
+                  <div className="text-center py-10">
+                    <FileJson className="w-10 h-10 text-muted-foreground mx-auto opacity-40 mb-2" />
+                    <p className="text-xs text-muted-foreground">No backup snapshots recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="border border-border/40 rounded-xl overflow-hidden divide-y divide-border/30 bg-background/30">
+                    {backups.map((bk, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors gap-4">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold font-mono text-foreground truncate">
+                            {bk.filename}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(bk.timestamp).toLocaleString()} • {(bk.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRestoreBackup(bk.filePath)}
+                            className="h-8 text-[11px] font-bold text-primary hover:bg-primary/10 px-3 rounded-lg"
+                          >
+                            Restore
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteBackup(bk.filename)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                            title="Delete Backup Snapshot"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* Password Prompt Modal for Encrypted Imports */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs animate-fade-in p-4">
+          <div className="bg-card border border-border/80 w-full max-w-md p-6 rounded-2xl shadow-premium space-y-4 animate-scale-in">
+            <div className="flex items-center gap-2.5 text-primary">
+              <Lock className="w-5 h-5" />
+              <h3 className="text-lg font-extrabold">Decryption Required</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This DevSwitch profiles archive is password-protected. Enter the decryption password to proceed.
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="decrypt-pwd" className="text-xs font-bold text-muted-foreground">
+                Decryption Password
+              </Label>
+              <Input
+                id="decrypt-pwd"
+                type="password"
+                value={importPassword}
+                onChange={(e) => setImportPassword(e.target.value)}
+                placeholder="Enter archive password"
+                className="h-10 bg-background/50 focus-visible:ring-1 focus-visible:ring-primary/80 text-sm"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleImportData(pendingImportPath || undefined, importPassword);
+                  }
+                }}
+              />
+            </div>
+            {importError && (
+              <div className="text-xs text-red-500 bg-red-500/10 p-2.5 rounded-lg flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4" />
+                <span>{importError}</span>
+              </div>
+            )}
+            <div className="flex justify-end gap-2.5 pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPendingImportPath(null);
+                  setImportPassword("");
+                  setImportError(null);
+                }}
+                className="h-9 px-4 text-xs font-bold"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleImportData(pendingImportPath || undefined, importPassword)}
+                className="h-9 px-4 bg-primary text-white hover:bg-primary/95 text-xs font-bold"
+              >
+                Decrypt & Import
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

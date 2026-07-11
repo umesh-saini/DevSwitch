@@ -9,7 +9,12 @@ export type LogActionType =
   | "SSH_KEY_IMPORTED"
   | "SSH_CONFIG_UPDATED"
   | "PROVIDER_KEY_UPLOADED"
-  | "PROVIDER_DISCONNECTED";
+  | "PROVIDER_DISCONNECTED"
+  | "BACKUP_CREATED"
+  | "BACKUP_RESTORED"
+  | "BACKUP_DELETED"
+  | "PROFILES_EXPORTED"
+  | "PROFILES_IMPORTED";
 
 /** Where a logged action originated. */
 export type LogSource = "app" | "cli";

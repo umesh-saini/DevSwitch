@@ -1,4 +1,4 @@
-import { logService, storageService } from "@devswitch/core";
+import { logService, storageService, backupService } from "@devswitch/core";
 import { parseArgs, flagBool } from "./args.ts";
 import { error } from "./ui.ts";
 import { CLI_VERSION } from "./version.ts";
@@ -17,6 +17,16 @@ import { pathCommand } from "./commands/path.ts";
 import { doctorCommand } from "./commands/doctor.ts";
 import { currentCommand } from "./commands/current.ts";
 import { completionCommand } from "./commands/completion.ts";
+import { importCommand } from "./commands/import.ts";
+import { exportCommand } from "./commands/export.ts";
+import { backupCommand } from "./commands/backup.ts";
+import { autobackupCommand } from "./commands/autobackup.ts";
+import { renameCommand } from "./commands/rename.ts";
+import { duplicateCommand } from "./commands/duplicate.ts";
+import { editCommand } from "./commands/edit.ts";
+import { statsCommand } from "./commands/stats.ts";
+import { updateCommand } from "./commands/update.ts";
+import { installCommand } from "./commands/installApp.ts";
 // @ts-ignore
 import omelette from "omelette";
 
@@ -38,7 +48,12 @@ completion.on("action", ({ reply }) => {
     "path",
     "doctor",
     "current", "whoami",
-    "completion"
+    "completion",
+    "import", "export",
+    "backup", "autobackup",
+    "rename", "duplicate",
+    "edit", "stats",
+    "update", "install"
   ]);
 });
 
@@ -48,9 +63,20 @@ completion.on("profile", ({ reply, before }) => {
     "remove", "rm", "delete",
     "show", "view", "info",
     "test",
-    "pubkey", "key", "sshkey", "ssh-key", "publickey", "pub"
+    "pubkey", "key", "sshkey", "ssh-key", "publickey", "pub",
+    "rename", "duplicate", "edit", "stats"
   ];
-  if (profileActions.includes(before)) {
+  if (before === "backup") {
+    reply(["list", "delete"]);
+  } else if (before === "delete" || before === "rm") {
+    try {
+      const profiles = storageService.getAllProfiles().map(p => p.name);
+      const backups = backupService.listBackupsSync().map(b => b.filename);
+      reply([...profiles, ...backups]);
+    } catch {
+      reply([]);
+    }
+  } else if (profileActions.includes(before)) {
     try {
       const profiles = storageService.getAllProfiles();
       reply(profiles.map(p => p.name));
@@ -100,6 +126,16 @@ const COMMANDS: Record<string, CommandFn> = {
   current: currentCommand,
   whoami: currentCommand,
   completion: completionCommand,
+  import: importCommand,
+  export: exportCommand,
+  backup: backupCommand,
+  autobackup: autobackupCommand,
+  rename: renameCommand,
+  duplicate: duplicateCommand,
+  edit: editCommand,
+  stats: statsCommand,
+  update: updateCommand,
+  install: installCommand,
 };
 
 async function main(): Promise<number> {

@@ -17,11 +17,17 @@ export * from "./paths.ts";
 export { JsonStore } from "./jsonStore.ts";
 
 // Utils
-export { encryptPassphrase, decryptPassphrase } from "./utils/encryption.ts";
+export {
+  encryptPassphrase,
+  decryptPassphrase,
+  encryptWithPassword,
+  decryptWithPassword,
+} from "./utils/encryption.ts";
 export * from "./utils/environment.ts";
 export * from "./utils/providerUtils.ts";
 
 // Services (singletons)
+export { backupService } from "./services/backupService.ts";
 export { storageService } from "./services/storageService.ts";
 export { logService } from "./services/logService.ts";
 export { sshKeyService } from "./services/sshKeyService.ts";

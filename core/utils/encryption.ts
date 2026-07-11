@@ -52,3 +52,40 @@ export function decryptPassphrase(encryptedData: string): string {
 
   return decrypted;
 }
+
+export interface EncryptedPayload {
+  encrypted: true;
+  salt: string;
+  iv: string;
+  data: string;
+}
+
+export function encryptWithPassword(text: string, password: string): EncryptedPayload {
+  const salt = crypto.randomBytes(16);
+  const iv = crypto.randomBytes(16);
+  const key = crypto.scryptSync(password, salt, 32);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+
+  return {
+    encrypted: true,
+    salt: salt.toString("hex"),
+    iv: iv.toString("hex"),
+    data: encrypted,
+  };
+}
+
+export function decryptWithPassword(payload: EncryptedPayload, password: string): string {
+  const salt = Buffer.from(payload.salt, "hex");
+  const iv = Buffer.from(payload.iv, "hex");
+  const key = crypto.scryptSync(password, salt, 32);
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+
+  let decrypted = decipher.update(payload.data, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+
+  return decrypted;
+}
+

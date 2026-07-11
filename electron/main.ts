@@ -18,7 +18,10 @@ import { sshConfigService } from "./services/sshConfigService.ts";
 import { sshConfigParserService } from "./services/sshConfigParserService.ts";
 import { getOAuthService, getApiService } from "./services/index.ts";
 import { gitService } from "./services/gitService.ts";
+import * as fs from "fs";
 import * as profileManager from "../core/services/profileManager.ts";
+import { backupService } from "../core/services/backupService.ts";
+import { encryptWithPassword, decryptWithPassword } from "../core/utils/encryption.ts";
 import { updaterService } from "./services/updaterService.ts";
 import {
   checkSSHPermissions,
@@ -496,6 +499,254 @@ ipcMain.handle("git:getProjectConfig", async (_, projectPath: string) => {
 
 ipcMain.handle("git:getProjectRemotes", async (_, projectPath: string) => {
   return await gitService.getProjectRemotes(projectPath);
+});
+
+// Backup & Transfer Handlers
+ipcMain.handle("backup:create", async (_, outputPath?: string) => {
+  try {
+    let targetPath = outputPath;
+    if (!targetPath) {
+      const result = await dialog.showSaveDialog(mainWindow!, {
+        title: "Save Backup",
+        defaultPath: path.join(os.homedir(), `devswitch-backup-${Date.now()}.json`),
+        filters: [{ name: "JSON Files", extensions: ["json"] }],
+      });
+      if (result.canceled || !result.filePath) {
+        return { success: false, error: "Save dialog canceled" };
+      }
+      targetPath = result.filePath;
+    }
+    const savedPath = await backupService.createBackup(targetPath);
+    return { success: true, filePath: savedPath };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("backup:list", async () => {
+  try {
+    return await backupService.listBackups();
+  } catch (error) {
+    console.error("Failed to list backups:", error);
+    return [];
+  }
+});
+
+ipcMain.handle("backup:restore", async (_, filePath: string) => {
+  try {
+    await backupService.restoreBackup(filePath);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("backup:delete", async (_, filename: string) => {
+  try {
+    const success = await backupService.deleteBackup(filename);
+    return { success };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("backup:isAutoEnabled", async () => {
+  return backupService.isAutoBackupEnabled();
+});
+
+ipcMain.handle("backup:setAutoEnabled", async (_, enabled: boolean) => {
+  backupService.setAutoBackupEnabled(enabled);
+});
+
+ipcMain.handle("transfer:export", async (_, params: { withSSH: boolean; password?: string }) => {
+  try {
+    const result = await dialog.showSaveDialog(mainWindow!, {
+      title: "Export Profiles",
+      defaultPath: path.join(os.homedir(), "devswitch-export.json"),
+      filters: [{ name: "JSON Files", extensions: ["json"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, error: "Export dialog canceled" };
+    }
+
+    const profiles = storageService.getAllProfiles();
+    const logs = logService.getAllLogs();
+
+    const exportProfiles = [];
+    for (const profile of profiles) {
+      const item: any = { profile };
+      if (params.withSSH && profile.keyPath) {
+        try {
+          if (fs.existsSync(profile.keyPath)) {
+            item.privateKey = fs.readFileSync(profile.keyPath, "utf8");
+          }
+          const pubPath = `${profile.keyPath}.pub`;
+          if (fs.existsSync(pubPath)) {
+            item.publicKey = fs.readFileSync(pubPath, "utf8");
+          }
+        } catch (err) {
+          console.error(`Could not read key for ${profile.name}:`, err);
+        }
+      }
+      exportProfiles.push(item);
+    }
+
+    const payload = {
+      version: "1.0.0",
+      timestamp: Date.now(),
+      profiles: exportProfiles,
+      logs,
+    };
+
+    let outputContent = JSON.stringify(payload, null, 2);
+
+    if (params.password) {
+      const encryptedPayload = encryptWithPassword(outputContent, params.password);
+      outputContent = JSON.stringify(encryptedPayload, null, 2);
+    }
+
+    fs.writeFileSync(result.filePath, outputContent, { mode: 0o600 });
+    logService.addLog("PROFILES_EXPORTED", `Exported ${profiles.length} profiles to ${result.filePath}`, {
+      filePath: result.filePath,
+      profileCount: profiles.length,
+      withSSH: params.withSSH,
+      encrypted: !!params.password
+    });
+    return { success: true, filePath: result.filePath };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+ipcMain.handle("transfer:import", async (_, params: { newSSH: boolean; password?: string; filePath?: string }) => {
+  try {
+    let targetPath = params.filePath;
+    if (!targetPath) {
+      const result = await dialog.showOpenDialog(mainWindow!, {
+        title: "Select DevSwitch Export File",
+        properties: ["openFile"],
+        filters: [{ name: "JSON Files", extensions: ["json"] }],
+      });
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false, error: "Import dialog canceled" };
+      }
+      targetPath = result.filePaths[0];
+    }
+
+    const fileContent = fs.readFileSync(targetPath, "utf8");
+    let parsed = JSON.parse(fileContent);
+
+    if (parsed.encrypted && parsed.salt && parsed.iv && parsed.data) {
+      if (!params.password) {
+        return { success: false, requiresPassword: true, filePath: targetPath };
+      }
+
+      try {
+        const decrypted = decryptWithPassword(parsed, params.password);
+        parsed = JSON.parse(decrypted);
+      } catch (err) {
+        return { success: false, error: "Invalid password or decrypted content is corrupted" };
+      }
+    }
+
+    if (!parsed.profiles || !Array.isArray(parsed.profiles)) {
+      return { success: false, error: "Invalid backup file: profiles array missing" };
+    }
+
+    const existingProfiles = storageService.getAllProfiles();
+    let addedCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+
+    for (const item of parsed.profiles) {
+      const profile = item.profile;
+      if (!profile || !profile.id || !profile.username || !profile.email) {
+        skippedCount++;
+        continue;
+      }
+
+      const existing = existingProfiles.find(p => p.id === profile.id);
+      if (existing) {
+        const isIdentical = JSON.stringify(existing) === JSON.stringify(profile) && !params.newSSH;
+        if (isIdentical) {
+          skippedCount++;
+          continue;
+        } else {
+          updatedCount++;
+        }
+      } else {
+        addedCount++;
+      }
+
+      if (params.newSSH) {
+        const algorithm = profile.keyAlgorithm || "ed25519";
+        const keyName = `id_${algorithm}_${profile.username}_devswitch_${Date.now()}`;
+        
+        const result = await sshKeyService.generateKey({
+          algorithm: algorithm as "ed25519" | "rsa",
+          name: keyName,
+          email: profile.email,
+        });
+
+        if (result.success && result.keyPath) {
+          profile.keyPath = result.keyPath;
+          profile.sshKeyType = "generated";
+          profile.keyAlgorithm = algorithm;
+        }
+      } else if (item.privateKey && profile.keyPath) {
+        try {
+          const keyDir = path.dirname(profile.keyPath);
+          if (!fs.existsSync(keyDir)) {
+            fs.mkdirSync(keyDir, { recursive: true, mode: 0o700 });
+          }
+          fs.writeFileSync(profile.keyPath, item.privateKey, { mode: 0o600 });
+          if (item.publicKey) {
+            fs.writeFileSync(`${profile.keyPath}.pub`, item.publicKey, { mode: 0o644 });
+          }
+        } catch (err) {
+          console.error(`Failed to restore key for ${profile.name}:`, err);
+        }
+      }
+
+      storageService.saveProfile(profile);
+      if (profile.keyPath) {
+        await sshConfigService.updateConfig(profile);
+      }
+    }
+
+    if (parsed.logs && Array.isArray(parsed.logs)) {
+      const existingLogs = logService.getAllLogs();
+      const existingIds = new Set(existingLogs.map((l) => l.id));
+      let logsAdded = 0;
+      for (const log of parsed.logs) {
+        if (log && log.id && !existingIds.has(log.id)) {
+          existingLogs.push(log);
+          logsAdded++;
+        }
+      }
+      if (logsAdded > 0) {
+        existingLogs.sort((a, b) => b.timestamp - a.timestamp);
+        if (existingLogs.length > 500) {
+          existingLogs.length = 500;
+        }
+        logService["store"].set("logs", existingLogs);
+      }
+    }
+
+    logService.addLog("PROFILES_IMPORTED", `Imported profiles from ${targetPath}: ${addedCount} added, ${updatedCount} updated, ${skippedCount} skipped`, {
+      filePath: targetPath,
+      addedCount,
+      updatedCount,
+      skippedCount,
+      totalInFile: parsed.profiles.length
+    });
+
+    return { success: true, importedCount: addedCount + updatedCount, addedCount, updatedCount, skippedCount };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
 });
 
 // App Handlers

@@ -22,6 +22,16 @@ ${c.bold("COMMANDS")}
   ${c.cyan("path")}                     Show the shared data directory path
   ${c.cyan("doctor")}                   Diagnose environment & data store
   ${c.cyan("completion")}               Install tab completion             ${c.gray("(with --install)")}
+  ${c.cyan("import")} <file>            Import profiles and logs
+  ${c.cyan("export")} <file>            Export profiles and logs
+  ${c.cyan("backup")}                   Backup the current state           ${c.gray("(with --output)")}
+  ${c.cyan("autobackup")} [on|off]      Toggle auto-backup of profiles
+  ${c.cyan("rename")} <old> <new>       Rename a profile name
+  ${c.cyan("duplicate")} <src> <dst>    Duplicate a profile (with a new key)
+  ${c.cyan("edit")} <profile>           Edit a profile's settings
+  ${c.cyan("stats")} <profile>          Show profile usage statistics
+  ${c.cyan("update")}                   Update the CLI and Desktop App
+  ${c.cyan("install")} app              Install the Desktop App installer
   ${c.cyan("help")} [command]           Show help (this screen)
   ${c.cyan("version")}                  Print the CLI version              ${c.gray("(alias: -v)")}
 
@@ -162,6 +172,65 @@ USAGE
 
 WHAT IT DOES
   Installs shell autocompletion into the appropriate user shell startup script (like ~/.bashrc or ~/.zshrc or fish config).`,
+
+  import: `${c.bold("devswitch import")} <file-path> — import profiles and logs
+
+USAGE
+  devswitch import <file-path> [--new-ssh] [--password <val>]
+
+OPTIONS
+  --new-ssh          Generate brand new SSH keys for every profile instead of restoring old ones
+  --password <val>   Specify the password to decrypt the file`,
+
+  export: `${c.bold("devswitch export")} <file-path> — export profiles and logs
+
+USAGE
+  devswitch export <file-path> [--with-ssh] [--password-protected] [--password <val>]
+
+OPTIONS
+  --with-ssh            Embed private and public keys in the export
+  --password-protected  Encrypt the exported data with a password
+  --password <val>      Bypass interactive prompt and use this password`,
+
+  backup: `${c.bold("devswitch backup")} — create a backup of current profiles and logs
+
+USAGE
+  devswitch backup [--output <path>]`,
+
+  autobackup: `${c.bold("devswitch autobackup")} — enable or disable automatic backups
+
+USAGE
+  devswitch autobackup [on|off]`,
+
+  rename: `${c.bold("devswitch rename")} — rename a profile
+
+USAGE
+  devswitch rename <old-name> <new-name>`,
+
+  duplicate: `${c.bold("devswitch duplicate")} — duplicate a profile with a new SSH key
+
+USAGE
+  devswitch duplicate <source> <dest>`,
+
+  edit: `${c.bold("devswitch edit")} — edit profile configuration
+
+USAGE
+  devswitch edit <profile> [--name <val>] [--email <val>] [--username <val>] [--provider <val>] [--tags <val>]`,
+
+  stats: `${c.bold("devswitch stats")} — show profile switch and usage statistics
+
+USAGE
+  devswitch stats <profile>`,
+
+  update: `${c.bold("devswitch update")} — check for and install updates
+
+USAGE
+  devswitch update`,
+
+  install: `${c.bold("devswitch install app")} — download and install the Desktop App
+
+USAGE
+  devswitch install app`,
 };
 
 export function printHelp(command?: string): void {

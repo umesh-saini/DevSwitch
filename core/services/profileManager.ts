@@ -12,6 +12,7 @@ import { logService } from "./logService.ts";
 import { sshKeyService } from "./sshKeyService.ts";
 import { sshConfigService } from "./sshConfigService.ts";
 import { sshAgentService } from "./sshAgentService.ts";
+import { backupService } from "./backupService.ts";
 import { encryptPassphrase } from "../utils/encryption.ts";
 import { getProviderSSHConfig } from "../utils/providerUtils.ts";
 
@@ -111,6 +112,8 @@ export async function createProfile(
     source,
   );
 
+  await backupService.triggerAutoBackup();
+
   return profile;
 }
 
@@ -196,6 +199,8 @@ export async function updateProfile(
     source,
   );
 
+  await backupService.triggerAutoBackup();
+
   return updatedProfile;
 }
 
@@ -222,6 +227,8 @@ export async function deleteProfile(
       source,
     );
   }
+
+  await backupService.triggerAutoBackup();
 
   return storageService.deleteProfile(id);
 }

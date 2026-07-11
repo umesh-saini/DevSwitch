@@ -208,4 +208,16 @@ export interface ElectronAPI {
     /** Close the permission window and open the main app window. */
     continue: () => Promise<void>;
   };
+  backup: {
+    create: (outputPath?: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    list: () => Promise<Array<{ filename: string; filePath: string; timestamp: number; size: number }>>;
+    restore: (filePath: string) => Promise<{ success: boolean; error?: string }>;
+    delete: (filename: string) => Promise<{ success: boolean; error?: string }>;
+    isAutoEnabled: () => Promise<boolean>;
+    setAutoEnabled: (enabled: boolean) => Promise<void>;
+  };
+  transfer: {
+    exportData: (params: { withSSH: boolean; password?: string }) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+    importData: (params: { newSSH: boolean; password?: string; filePath?: string }) => Promise<{ success: boolean; requiresPassword?: boolean; filePath?: string; importedCount?: number; addedCount?: number; updatedCount?: number; skippedCount?: number; error?: string }>;
+  };
 }

@@ -90,6 +90,18 @@ const electronAPI: ElectronAPI = {
     openSettings: (): Promise<void> => ipcRenderer.invoke('permission:openSettings'),
     continue: (): Promise<void> => ipcRenderer.invoke('permission:continue'),
   },
+  backup: {
+    create: (outputPath?: string) => ipcRenderer.invoke('backup:create', outputPath),
+    list: () => ipcRenderer.invoke('backup:list'),
+    restore: (filePath: string) => ipcRenderer.invoke('backup:restore', filePath),
+    delete: (filename: string) => ipcRenderer.invoke('backup:delete', filename),
+    isAutoEnabled: () => ipcRenderer.invoke('backup:isAutoEnabled'),
+    setAutoEnabled: (enabled: boolean) => ipcRenderer.invoke('backup:setAutoEnabled', enabled),
+  },
+  transfer: {
+    exportData: (params: { withSSH: boolean; password?: string }) => ipcRenderer.invoke('transfer:export', params),
+    importData: (params: { newSSH: boolean; password?: string; filePath?: string }) => ipcRenderer.invoke('transfer:import', params),
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", electronAPI);
