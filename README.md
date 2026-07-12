@@ -13,6 +13,10 @@
 
 </div>
 
+* **Official Website & Downloads:** [https://devswitch.in](https://devswitch.in)
+* **Changelog & Releases:** [https://devswitch.in/changelog](https://devswitch.in/changelog)
+* **npm Package:** [https://www.npmjs.com/package/devswitch-cli](https://www.npmjs.com/package/devswitch-cli)
+
 ---
 
 ## 📋 Table of Contents
@@ -405,11 +409,9 @@ Each profile has its own SSH host alias. Simply use the appropriate host when cl
 
 ## 🖥️ Command-Line Tool (`devswitch`)
 
-DevSwitch ships with a standalone CLI that manages the same profiles as the
-desktop app. It runs on **Windows, macOS, and Linux** (anything with
-**Node.js ≥ 18**) and works **with or without** the desktop app installed — both
-read and write the same database, so there are no conflicts and install order
-doesn't matter.
+DevSwitch ships with a standalone CLI that manages the same profiles as the desktop app. It runs on **Windows, macOS, and Linux** (anything with **Node.js ≥ 18**) and works **with or without** the desktop app installed — both read and write the same database, so there are no conflicts and install order doesn't matter.
+
+* **NPM Package:** [devswitch-cli](https://www.npmjs.com/package/devswitch-cli)
 
 ### Install
 
@@ -422,7 +424,7 @@ npm install -g devswitch-cli
 devswitch help
 
 # C) Standalone, one-line install (served by the distribution site)
-curl -sSL https://<your-app-host>/init/cli.sh | bash
+curl -sSL https://devswitch.in/init/cli.sh | bash
 ```
 
 For local development from this repo:
@@ -431,10 +433,7 @@ For local development from this repo:
 npm run cli:link     # builds + `npm link` so the `devswitch` command points at your build
 ```
 
-> **PATH is handled for you.** With `npm install -g` / `npm link`, npm creates the
-> right entry on every OS (a symlink on macOS/Linux, a `.cmd`/`.ps1` shim on
-> Windows) inside npm's global bin directory, which is already on your PATH.
-> No manual environment-variable or symlink setup required.
+> **PATH is handled for you.** With `npm install -g` / `npm link`, npm creates the right entry on every OS (a symlink on macOS/Linux, a `.cmd`/`.ps1` shim on Windows) inside npm's global bin directory, which is already on your PATH. No manual environment-variable or symlink setup required.
 >
 > If a standalone CLI is already installed, the app installer won't overwrite it.
 
@@ -447,7 +446,11 @@ devswitch use <profile>        # switch profile               (alias: switch)
 devswitch current              # show the active profile      (alias: whoami)
 devswitch add                  # create a profile             (alias: create)
 devswitch remove <profile>     # delete a profile             (alias: rm)
+devswitch edit <profile>       # edit profile properties
+devswitch duplicate <src> <dst># duplicate a profile with a new key
+devswitch rename <old> <new>   # rename a profile
 devswitch show <profile>       # full details                 (alias: view)
+devswitch stats <profile>      # show profile usage statistics
 devswitch sync                 # import unmanaged SSH keys
 devswitch test <profile>       # test SSH authentication
 devswitch pubkey <profile>     # print public key (pipe-friendly)
@@ -455,10 +458,15 @@ devswitch clone <url> [dir] --profile <name>   # clone with a profile's identity
 devswitch logs                 # recent activity (app + CLI)
 devswitch doctor               # diagnose environment & data store
 devswitch path                 # show the shared data directory
+devswitch autobackup [on|off]  # turn automatic backups on or off
+devswitch backup [--output p]  # create, list or delete database backups
+devswitch export [file]        # export profiles with password protection
+devswitch import <file>        # import profiles with password protection
+devswitch update               # update the CLI and desktop application
+devswitch install-app          # download and install the desktop application
 ```
 
-`<profile>` matches a name, username, email, or id (partial, case-insensitive).
-Add `--json` to most commands for scriptable output.
+`<profile>` matches a name, username, email, or id (partial, case-insensitive). Add `--json` to most commands for scriptable output.
 
 See **[cli/README.md](cli/README.md)** for the complete reference.
 
